@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    // JS project: enable JS and use TS just for IntelliSense/IDE type checking
+    "allowJs": true,
+    "checkJs": false,
+
+    // Target modern Node runtime
+    "target": "ES2022",
+    "lib": ["ES2022"],
+
+    // ESM-friendly Node resolution (server uses type: "module")
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+
+    // Quality-of-life flags
+    "noEmit": true,
+    "strict": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+
+    // Node typings
+    "types": ["node"],
+    "typeRoots": ["./node_modules/@types"]
+  },
+  "include": [
+    "src/**/*.js"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

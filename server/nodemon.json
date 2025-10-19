@@ -1,0 +1,19 @@
+{
+  "watch": [
+    "src/**/*.js",
+    "src/**/*.json"
+  ],
+  "ext": "js,json,env",
+  "ignore": [
+    "../frontend/**",
+    "uploads/**",
+    "node_modules/**"
+  ],
+  "env": {
+    "USE_IN_MEMORY_DB": "true",
+    "PORT": "4000",
+    "NODE_ENV": "development",
+    "MONGOMS_VERSION": "7.0.14",
+    "MONGOMS_DEBUG": "1"
+  }
+}

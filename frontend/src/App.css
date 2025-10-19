@@ -1,0 +1,80 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* --- Responsive Navigation & Topbars --- */
+.navbar { position: sticky; top: 0; z-index: 10; }
+.navbar-inner { display: grid; grid-template-columns: 160px 1fr 240px; align-items: center; gap: 12px; }
+.nav-links { display: flex; gap: 10px; align-items: center; }
+.nav-actions { display: flex; gap: 8px; justify-content: flex-end; align-items: center; position: relative; }
+.hamburger { display: none; background: #111827; color: #fff; border: 1px solid #111827; border-radius: 8px; padding: 8px 10px; }
+.mobile-panel { display: none; }
+
+.topbar-inner { display: grid; grid-template-columns: 220px 1fr 260px; align-items: center; gap: 12px; max-width: 1200px; margin: 0 auto; padding: 10px 16px; }
+
+@media (max-width: 960px) {
+  .navbar-inner { grid-template-columns: 1fr auto; }
+  .nav-links { display: none; }
+  .hamburger { display: inline-flex; }
+  .nav-actions { display: none; }
+  .mobile-panel.open { display: grid; gap: 10px; padding: 10px 12px; border-top: 1px solid #eef2f7; }
+}
+
+@media (max-width: 768px) {
+  .topbar-inner { grid-template-columns: 1fr; gap: 8px; }
+}
+
+
+/* --- Responsive Sidebar Drawer (Owner/Admin) --- */
+.sidebar { transition: transform 220ms ease; }
+.sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 50; }
+.only-mobile { display: none; }
+.content-with-sidebar { margin-left: 240px; }
+
+@media (max-width: 1024px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-overlay { display: none; }
+  .only-mobile { display: inline-flex; }
+  .content-with-sidebar { margin-left: 0; }
+}
+
