@@ -24,12 +24,12 @@ services:
       - key: ADMIN_PASSWORD
         sync: false
 
-  - type: static_site
+  - type: static
     name: relstate-frontend
     plan: free
     rootDir: frontend
     buildCommand: npm ci && npm run build
-    publishPath: dist
+    staticPublishPath: dist
     headers:
       - path: "/*"
         name: Cache-Control
