@@ -40,22 +40,22 @@ app.use(async (_req, _res, next) => {
 // In serverless we won't use local uploads dir; still keep static for local dev if present
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+app.use('/api/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
-// Health check
-app.get('/health', (_req, res) => {
+// Health check (under /api)
+app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', env: process.env.NODE_ENV || 'development' });
 });
 
 // Routes
-app.use('/auth', authRouter);
-app.use('/users', usersRouter);
-app.use('/properties', propertiesRouter);
-app.use('/uploads', uploadsRouter);
-app.use('/inquiries', inquiriesRouter);
-app.use('/offers', offersRouter);
-app.use('/media', mediaRouter);
-app.use('/agents', agentsRouter);
-app.use('/support', supportRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/users', usersRouter);
+app.use('/api/properties', propertiesRouter);
+app.use('/api/uploads', uploadsRouter);
+app.use('/api/inquiries', inquiriesRouter);
+app.use('/api/offers', offersRouter);
+app.use('/api/media', mediaRouter);
+app.use('/api/agents', agentsRouter);
+app.use('/api/support', supportRouter);
 
 export default app;
