@@ -13,15 +13,14 @@ export async function connectDB() {
   const env = (process.env.NODE_ENV || 'development').toLowerCase();
   const forceMem = (process.env.USE_IN_MEMORY_DB || '').toLowerCase() === 'true';
   let uri = process.env.MONGODB_URI;
-  if (forceMem) {
-    // Explicitly force in-memory DB (even in production, with warning)
+  if (forceMem && env !== 'production') {
+    // Explicitly force in-memory DB in development/test
     if (!memServer) {
       memServer = await MongoMemoryServer.create();
       global._mongooseMemServer = memServer;
     }
     uri = memServer.getUri();
-    const prodNote = env === 'production' ? ' (WARNING: production environment)' : '';
-    console.warn('[DB] Forcing in-memory MongoDB via USE_IN_MEMORY_DB=true' + prodNote);
+    console.warn('[DB] Forcing in-memory MongoDB via USE_IN_MEMORY_DB=true');
   } else if (!uri) {
     // Fallback to in-memory MongoDB in non-production if URI is missing
     if (env !== 'production') {
