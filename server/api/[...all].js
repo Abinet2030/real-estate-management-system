@@ -1,6 +1,6 @@
 import app from '../src/app.js';
 
-// Handle the root /api path
+// Catch-all to handle /api/* paths and forward to Express
 export default function handler(req, res) {
   return app(req, res);
 }
