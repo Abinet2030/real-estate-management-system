@@ -13,7 +13,15 @@ export async function connectDB() {
   const env = (process.env.NODE_ENV || 'development').toLowerCase();
   const forceMem = (process.env.USE_IN_MEMORY_DB || '').toLowerCase() === 'true';
   let uri = process.env.MONGODB_URI;
-  if (forceMem && env !== 'production') {
+  const isVercel = !!process.env.VERCEL;
+
+  // On Vercel (serverless), do NOT use mongodb-memory-server. Always require a real URI.
+  if (isVercel) {
+    if (!uri) {
+      throw new Error('Missing MONGODB_URI in environment (required on Vercel)');
+    }
+  }
+  if (!isVercel && forceMem && env !== 'production') {
     // Explicitly force in-memory DB in development/test
     if (!memServer) {
       memServer = await MongoMemoryServer.create();
