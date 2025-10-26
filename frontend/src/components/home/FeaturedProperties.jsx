@@ -81,7 +81,16 @@ export default function FeaturedProperties({ q = '' }) {
         }
         if (!ignore) setItems(list)
       } catch (e) {
-        if (!ignore) setError(e.message)
+        if (!ignore) {
+          // In development, if API fails (e.g., backend not ready/proxy error),
+          // fall back to demo featured items and suppress the error banner.
+          if (import.meta.env.DEV) {
+            setItems(DEMO_FEATURED)
+            setError('')
+          } else {
+            setError(e.message)
+          }
+        }
       } finally {
         if (!ignore) setLoading(false)
       }
@@ -105,7 +114,7 @@ export default function FeaturedProperties({ q = '' }) {
     return f
   }, [q, urlParams, liveFilter])
 
-  // Listen for live filter events from Hero
+  
   useEffect(() => {
     function onFilter(e){ setLiveFilter(e?.detail || {}) }
     window.addEventListener('home:filter', onFilter)
