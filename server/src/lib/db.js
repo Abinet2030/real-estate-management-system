@@ -18,7 +18,7 @@ export async function connectDB() {
   // On Vercel (serverless), do NOT use mongodb-memory-server. Always require a real URI.
   if (isVercel) {
     if (!uri) {
-      throw new Error('Missing MONGODB_URI in environment (required on Vercel)');
+      throw new Error('Missing MONGODB_URI in environment (required on Vercel/production)');
     }
   }
   if (!isVercel && forceMem && env !== 'production') {
@@ -30,17 +30,13 @@ export async function connectDB() {
     uri = memServer.getUri();
     console.warn('[DB] Forcing in-memory MongoDB via USE_IN_MEMORY_DB=true');
   } else if (!uri) {
-    // Fallback to in-memory MongoDB in non-production if URI is missing
-    if (env !== 'production') {
-      if (!memServer) {
-        memServer = await MongoMemoryServer.create();
-        global._mongooseMemServer = memServer;
-      }
-      uri = memServer.getUri();
-      console.warn('[DB] Using in-memory MongoDB instance for development/testing');
-    } else {
-      throw new Error('Missing MONGODB_URI in environment');
-    }
+    // Atlas-first: always require a real URI unless explicitly forcing in-memory
+    const help = [
+      'Set MONGODB_URI to your Atlas connection string, e.g.:',
+      'mongodb+srv://<user>:<pass>@<cluster-host>/<db>?retryWrites=true&w=majority',
+      'Ensure the Database User has readWrite on the database and your IP is allowlisted.'
+    ].join('\n');
+    throw new Error('Missing MONGODB_URI in environment. In-memory DB is disabled by default.\n' + help);
   }
 
   if (!cached.promise) {
