@@ -47,6 +47,16 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', env: process.env.NODE_ENV || 'development' });
 });
 
+// Friendly root handlers
+// Note: On Vercel, requests to "/" are rewritten to "/api/" by `server/api/[...all].js`.
+// Handle both local dev ("/") and serverless ("/api" or "/api/") entry points.
+app.get('/', (_req, res) => {
+  res.send('API server is running. See /api/health');
+});
+app.get(['/api', '/api/'], (_req, res) => {
+  res.redirect('/api/health');
+});
+
 // Routes
 app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
