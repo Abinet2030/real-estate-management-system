@@ -77,8 +77,25 @@ function buildUrl(path, params) {
 async function request(path, { method = 'GET', params, body, timeoutMs = 8000 } = {}) {
   const token = localStorage.getItem('auth:token') || ''
 
-  // Single target: absolute VITE_API_URL if set, otherwise current origin (Vite proxy in dev)
+  // Build primary attempt
   const attempts = [buildUrl(path, params)]
+  // Resilient fallback: if an absolute VITE_API_URL is provided but does not end with '/api',
+  // retry by prefixing the request path with 'api/'. This covers cases where the server mounts API under '/api'.
+  try {
+    const isAbsoluteBase = /^https?:\/\//i.test(BASE_URL)
+    if (isAbsoluteBase) {
+      const baseForCheck = new URL(BASE_URL)
+      const baseEndsWithApi = baseForCheck.pathname.replace(/\/$/, '').endsWith('/api')
+      if (!baseEndsWithApi) {
+        const altPath = `/api/${String(path || '').replace(/^\//, '')}`
+        const altUrl = buildUrl(altPath, params)
+        // Avoid duplicate if it happens to be identical
+        if (!attempts.some(u => u.toString() === altUrl.toString())) attempts.push(altUrl)
+      }
+    }
+  } catch {
+    // ignore URL construction errors; we'll proceed with primary attempt only
+  }
 
   let lastErr
   for (const url of attempts) {
@@ -91,6 +108,7 @@ async function request(path, { method = 'GET', params, body, timeoutMs = 8000 } 
           method,
           headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: body ? JSON.stringify(body) : undefined,
@@ -131,7 +149,7 @@ async function request(path, { method = 'GET', params, body, timeoutMs = 8000 } 
         // try next
       } finally {
         if (t) clearTimeout(t)
-    }
+      }
   }
   throw lastErr || new Error('API request failed')
 }
