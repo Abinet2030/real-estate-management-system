@@ -61,6 +61,13 @@ async function request(path, { method = 'GET', params, body, timeoutMs = 8000 } 
           err.status = res.status
           throw err
         }
+        // Validate content-type to avoid "Unexpected token <" when HTML is returned
+        const ct = res.headers.get('content-type') || ''
+        if (!ct.includes('application/json')) {
+          const text = await res.text()
+          const preview = (text || '').slice(0, 200)
+          throw new Error(`Expected JSON but received ${ct || 'unknown content-type'}. Preview: ${preview}`)
+        }
         return await res.json()
       } catch (e) {
         lastErr = e?.name === 'AbortError' ? new Error('Request timed out') : e
