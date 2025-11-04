@@ -1,4 +1,61 @@
 const BASE_URL = import.meta.env.VITE_API_URL || '/api'
+const USE_DEMO = String(import.meta.env.VITE_USE_DEMO_DATA || '').toLowerCase() === 'true'
+
+// Minimal demo dataset for frontend-only usage
+const DEMO_PROPERTIES = [
+  {
+    id: 'demo-1',
+    title: 'Modern Family House',
+    description: 'Spacious 4 bed family home with garden',
+    price: 350000,
+    currency: 'USD',
+    type: 'house',
+    bedrooms: 4,
+    bathrooms: 3,
+    areaSqm: 220,
+    location: { city: 'Addis Ababa', region: 'Addis Ababa', country: 'Ethiopia' },
+    images: [
+      'https://images.unsplash.com/photo-1560185008-b033106af2f1?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1575517111478-7f6dbfbfb9d1?q=80&w=800&auto=format&fit=crop',
+    ],
+    status: 'published',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'demo-2',
+    title: 'City View Apartment',
+    description: 'Sunny 2 bed apartment with great views',
+    price: 1200,
+    currency: 'USD',
+    type: 'apartment',
+    bedrooms: 2,
+    bathrooms: 1,
+    areaSqm: 85,
+    location: { city: 'Nairobi', region: 'Nairobi', country: 'Kenya' },
+    images: [
+      'https://images.unsplash.com/photo-1502673530728-f79b4cab31b1?q=80&w=1200&auto=format&fit=crop',
+    ],
+    status: 'published',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'demo-3',
+    title: 'Cozy Studio',
+    description: 'Perfect starter studio near downtown',
+    price: 550,
+    currency: 'USD',
+    type: 'apartment',
+    bedrooms: 0,
+    bathrooms: 1,
+    areaSqm: 32,
+    location: { city: 'Kigali', region: 'Kigali', country: 'Rwanda' },
+    images: [
+      'https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=1200&auto=format&fit=crop',
+    ],
+    status: 'published',
+    createdAt: new Date().toISOString(),
+  },
+]
 
 function buildUrl(path, params) {
   const isAbsolute = /^https?:\/\//i.test(BASE_URL)
@@ -114,7 +171,10 @@ export const api = {
   setUserInactive: (id) => request(`/users/${id}/reject`, { method: 'POST' }),
   // Properties
   createProperty: (body) => request('/properties', { method: 'POST', body }),
-  getPublishedProperties: () => request('/properties/published'),
+  getPublishedProperties: () => {
+    if (USE_DEMO) return Promise.resolve(DEMO_PROPERTIES)
+    return request('/properties/published')
+  },
   getPropertiesByOwner: (ownerId) => request('/properties/by-owner', { params: { ownerId } }),
   // Inquiries
   // Backwards-compat helpers used by some components
