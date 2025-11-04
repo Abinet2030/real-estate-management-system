@@ -57,6 +57,146 @@ const DEMO_PROPERTIES = [
   },
 ]
 
+// Simple localStorage-backed demo state when running frontend-only
+const DEMO_STORE_KEY = 'demo:state:v1'
+function loadDemoState() {
+  try {
+    const raw = localStorage.getItem(DEMO_STORE_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  const initial = {
+    users: [
+      { id: 'u-admin', name: 'Demo Admin', email: 'admin@example.com', role: 'admin', status: 'active', createdAt: new Date().toISOString() },
+      { id: 'u-owner', name: 'Owner One', email: 'owner@example.com', role: 'owner', status: 'active', createdAt: new Date().toISOString() },
+      { id: 'u-buyer', name: 'Buyer One', email: 'buyer@example.com', role: 'buyer', status: 'active', createdAt: new Date().toISOString() },
+    ],
+    agents: [
+      { id: 'a-1', name: 'Agent A', email: 'agent@example.com', phone: '+251900000000', status: 'active', createdAt: new Date().toISOString() },
+    ],
+    properties: DEMO_PROPERTIES.map(p => ({ ...p, ownerId: 'u-owner' })),
+    inquiries: [],
+    offers: [],
+    media: [],
+    support: [],
+    pendingSellers: [],
+    pendingAgents: [],
+  }
+  localStorage.setItem(DEMO_STORE_KEY, JSON.stringify(initial))
+  return initial
+}
+function saveDemoState(state) {
+  localStorage.setItem(DEMO_STORE_KEY, JSON.stringify(state))
+}
+function genId(prefix) {
+  return `${prefix}-${Math.random().toString(36).slice(2, 10)}`
+}
+
+function createDemoApi() {
+  const getState = () => loadDemoState()
+  const setState = (updater) => {
+    const s = getState()
+    const next = typeof updater === 'function' ? updater(s) : updater
+    saveDemoState(next)
+    return next
+  }
+
+  const ok = (data) => Promise.resolve(data)
+
+  return {
+    // Auth
+    login: async (body) => {
+      const s = getState()
+      const user = s.users.find(u => u.email === body?.email) || s.users[0]
+      return ok({ token: 'demo-token', user })
+    },
+    register: async (body) => {
+      const id = genId('u')
+      const user = { id, name: body?.name || 'New User', email: body?.email || `${id}@example.com`, role: body?.role || 'buyer', status: 'active', createdAt: new Date().toISOString() }
+      setState(s => ({ ...s, users: [...s.users, user] }))
+      return ok({ token: 'demo-token', user })
+    },
+
+    // Users & Agents (admin)
+    getUsers: async () => ok(getState().users),
+    getAgents: async () => ok(getState().agents),
+    getAgent: async (id) => ok(getState().agents.find(a => a.id === id) || null),
+    getPendingSellers: async () => ok(getState().pendingSellers),
+    getPendingAgents: async () => ok(getState().pendingAgents),
+    approveUser: async (id) => ok(setState(s => { const user = s.users.find(u => u.id === id); if (user) user.status = 'active'; return { ...s } })),
+    rejectUser: async (id) => ok(setState(s => { const user = s.users.find(u => u.id === id); if (user) user.status = 'inactive'; return { ...s } })),
+    deleteUser: async (id) => ok(setState(s => ({ ...s, users: s.users.filter(u => u.id !== id) }))),
+    setUserActive: async (id) => ok(setState(s => { const user = s.users.find(u => u.id === id); if (user) user.status = 'active'; return { ...s } })),
+    setUserInactive: async (id) => ok(setState(s => { const user = s.users.find(u => u.id === id); if (user) user.status = 'inactive'; return { ...s } })),
+
+    // Properties
+    getProperties: async (params) => {
+      let items = getState().properties
+      if (params?.ownerId) items = items.filter(p => p.ownerId === params.ownerId)
+      return ok(items)
+    },
+    getProperty: async (id) => ok(getState().properties.find(p => p.id === id) || null),
+    createProperty: async (body) => {
+      const prop = { ...body, id: genId('prop'), status: 'published', createdAt: new Date().toISOString() }
+      setState(s => ({ ...s, properties: [prop, ...s.properties] }))
+      return ok(prop)
+    },
+    getPublishedProperties: async () => ok(getState().properties.filter(p => p.status === 'published')),
+    getPropertiesByOwner: async (ownerId) => ok(getState().properties.filter(p => p.ownerId === ownerId)),
+
+    // Inquiries
+    getInquiries: async (ownerId) => ok(ownerId ? getState().inquiries.filter(i => i.ownerId === ownerId) : getState().inquiries),
+    getBuyerInquiries: async (buyerEmail) => ok(getState().inquiries.filter(i => i.buyerEmail === buyerEmail)),
+    getOwnerInquiries: async (ownerId) => ok(getState().inquiries.filter(i => i.ownerId === ownerId)),
+    getAllInquiries: async () => ok(getState().inquiries),
+    getInquiry: async (id) => ok(getState().inquiries.find(i => i.id === id) || null),
+    createInquiry: async (body) => {
+      const item = { id: genId('inq'), ...body, messages: [], archived: false, createdAt: new Date().toISOString() }
+      setState(s => ({ ...s, inquiries: [item, ...s.inquiries] }))
+      return ok(item)
+    },
+    replyInquiry: async (id, text, attachments = []) => ok(setState(s => {
+      const i = s.inquiries.find(x => x.id === id)
+      if (i) (i.messages || (i.messages = [])).push({ id: genId('msg'), text, attachments, sender: 'owner', createdAt: new Date().toISOString() })
+      return { ...s }
+    })) ,
+    sendInquiryMessage: async (id, text, attachments = [], sender = 'admin') => ok(setState(s => {
+      const i = s.inquiries.find(x => x.id === id)
+      if (i) (i.messages || (i.messages = [])).push({ id: genId('msg'), text, attachments, sender, createdAt: new Date().toISOString() })
+      return { ...s }
+    })) ,
+    archiveInquiry: async (id) => ok(setState(s => { const i = s.inquiries.find(x => x.id === id); if (i) i.archived = true; return { ...s } })),
+    markInquiryRead: async (_id, _role) => ok(true),
+
+    // Support tickets
+    createSupportTicket: async (body) => {
+      const t = { id: genId('sup'), status: 'open', ...body, createdAt: new Date().toISOString() }
+      setState(s => ({ ...s, support: [t, ...s.support] }))
+      return ok(t)
+    },
+    getSupportTickets: async () => ok(getState().support),
+    resolveSupportTicket: async (id) => ok(setState(s => { const t = s.support.find(x => x.id === id); if (t) t.status = 'resolved'; return { ...s } })),
+
+    // Offers
+    getOffers: async (ownerId) => ok(ownerId ? getState().offers.filter(o => o.ownerId === ownerId) : getState().offers),
+    acceptOffer: async (id) => ok(setState(s => { const o = s.offers.find(x => x.id === id); if (o) o.status = 'accepted'; return { ...s } })),
+    rejectOffer: async (id) => ok(setState(s => { const o = s.offers.find(x => x.id === id); if (o) o.status = 'rejected'; return { ...s } })),
+    counterOffer: async (id, amount) => ok(setState(s => { const o = s.offers.find(x => x.id === id); if (o) { o.status = 'countered'; o.counterAmount = amount; } return { ...s } })),
+
+    // Media
+    getMedia: async (ownerId) => ok(ownerId ? getState().media.filter(m => m.ownerId === ownerId) : getState().media),
+
+    // Uploads (fake)
+    uploadImages: async (files) => {
+      const items = (files || []).map((_f, idx) => ({
+        url: `https://picsum.photos/seed/${Date.now()}_${idx}/800/600`,
+        id: genId('img'),
+      }))
+      setState(s => ({ ...s, media: [...items, ...s.media] }))
+      return ok(items)
+    },
+  }
+}
+
 function buildUrl(path, params) {
   const isAbsolute = /^https?:\/\//i.test(BASE_URL)
   // If absolute URL provided, use it; otherwise route via current origin (Vite proxy)
@@ -169,7 +309,7 @@ async function uploadImages(files) {
   return res.json()
 }
 
-export const api = {
+const liveApi = {
   getProperties: (params) => request('/properties', { params }),
   getProperty: (id) => request(`/properties/${id}`),
   getUsers: (params) => request('/users', { params }),
@@ -219,5 +359,8 @@ export const api = {
   // Uploads
   uploadImages,
 }
+
+// Prefer demo API when explicitly requested via env flag
+export const api = USE_DEMO ? createDemoApi() : liveApi
 
 export default api
