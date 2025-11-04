@@ -1,0 +1,166 @@
+{
+  "users": [
+    {
+      "name": "Admin",
+      "email": "admin@realestate.local",
+      "role": "admin",
+      "password": "1234"
+    },
+    {
+      "name": "Seller User",
+      "email": "seler@gmail.com",
+      "role": "seller",
+      "password": "1234",
+      "phone": "+1-555-0101"
+    },
+    {
+      "name": "Agent User",
+      "email": "agents@gmail.com",
+      "role": "agent",
+      "password": "1234",
+      "phone": "+1-555-0102",
+      "agentCode": "AG123456"
+    },
+    {
+      "name": "Alex Agent",
+      "email": "agent.alex@gmail.com",
+      "role": "agent",
+      "password": "1234",
+      "phone": "+1-555-0201",
+      "agentCode": "AG200101"
+    },
+    {
+      "name": "Sara Agent",
+      "email": "agent.sara@gmail.com",
+      "role": "agent",
+      "password": "1234",
+      "phone": "+1-555-0202",
+      "agentCode": "AG200202"
+    },
+    {
+      "name": "Liam Agent",
+      "email": "agent.liam@gmail.com",
+      "role": "agent",
+      "password": "1234",
+      "phone": "+1-555-0203",
+      "agentCode": "AG200303"
+    },
+    {
+      "name": "Buyer User",
+      "email": "buyer@gmail.com",
+      "role": "buyer",
+      "password": "1234",
+      "phone": "+1-555-0103"
+    }
+  ],
+  "properties": [
+    {
+      "title": "Cozy Family House",
+      "description": "A cozy 3-bedroom family house with a spacious backyard.",
+      "price": 250000,
+      "currency": "USD",
+      "type": "house",
+      "bedrooms": 3,
+      "bathrooms": 2,
+      "areaSqm": 180,
+      "location": {
+        "address": "123 Maple Street",
+        "city": "Springfield",
+        "region": "IL",
+        "country": "USA",
+        "lat": 39.7817,
+        "lng": -89.6501
+      },
+      "images": [],
+      "ownerEmail": "seler@gmail.com",
+      "agentEmail": "agents@gmail.com",
+      "status": "published"
+    },
+    {
+      "title": "Modern City Apartment",
+      "description": "A modern 2-bedroom apartment in the heart of the city.",
+      "price": 320000,
+      "currency": "USD",
+      "type": "apartment",
+      "bedrooms": 2,
+      "bathrooms": 1,
+      "areaSqm": 95,
+      "location": {
+        "address": "456 Oak Avenue",
+        "city": "Metropolis",
+        "region": "NY",
+        "country": "USA",
+        "lat": 40.7128,
+        "lng": -74.006
+      },
+      "images": [],
+      "ownerEmail": "seler@gmail.com",
+      "agentEmail": "agents@gmail.com",
+      "status": "pending"
+    }
+    ,
+    {
+      "title": "Riverside Loft",
+      "description": "Open-plan loft with river views and modern finishes.",
+      "price": 410000,
+      "currency": "USD",
+      "type": "apartment",
+      "bedrooms": 1,
+      "bathrooms": 1,
+      "areaSqm": 72,
+      "location": {
+        "address": "12 River Walk",
+        "city": "Portside",
+        "region": "CA",
+        "country": "USA",
+        "lat": 34.0522,
+        "lng": -118.2437
+      },
+      "images": [],
+      "agentEmail": "agent.alex@gmail.com",
+      "status": "published"
+    },
+    {
+      "title": "Suburban Corner House",
+      "description": "Corner-lot house with renovated kitchen and double garage.",
+      "price": 365000,
+      "currency": "USD",
+      "type": "house",
+      "bedrooms": 4,
+      "bathrooms": 3,
+      "areaSqm": 210,
+      "location": {
+        "address": "789 Pine Crescent",
+        "city": "Greendale",
+        "region": "TX",
+        "country": "USA",
+        "lat": 29.7604,
+        "lng": -95.3698
+      },
+      "images": [],
+      "agentEmail": "agent.sara@gmail.com",
+      "status": "published"
+    },
+    {
+      "title": "Downtown Office Suite",
+      "description": "Turn-key office suite ideal for startups, shared amenities.",
+      "price": 520000,
+      "currency": "USD",
+      "type": "office",
+      "bedrooms": 0,
+      "bathrooms": 2,
+      "areaSqm": 300,
+      "location": {
+        "address": "200 Market Street",
+        "city": "Centerville",
+        "region": "WA",
+        "country": "USA",
+        "lat": 47.6062,
+        "lng": -122.3321
+      },
+      "images": [],
+      "agentEmail": "agent.liam@gmail.com",
+      "status": "pending"
+    }
+  ]
+}

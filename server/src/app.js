@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { connectDB } from './lib/db.js';
-import { seedAdminIfNeeded } from './lib/seed.js';
+import { seedAdminIfNeeded, seedFromFixtures } from './lib/seed.js';
 import authRouter from './routes/auth.js';
 import usersRouter from './routes/users.js';
 import propertiesRouter from './routes/properties.js';
@@ -29,6 +29,7 @@ app.use(async (_req, _res, next) => {
     await connectDB();
     if (!bootstrapped) {
       await seedAdminIfNeeded();
+      await seedFromFixtures();
       bootstrapped = true;
     }
     next();
