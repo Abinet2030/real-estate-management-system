@@ -2,12 +2,39 @@ import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import InquiryChatPopup from '../InquiryChatPopup.jsx'
 
-export default function PropertyCard({ property }) {
+export default function PropertyCard({ property, agent }) {
   const p = property
   const [open, setOpen] = useState(false)
+  
+  const candidates = imageCandidates(p)
+  const [idx, setIdx] = useState(0)
+  const cover = candidates[idx]
+  const coverSrc = cover ? toAbsolute(cover) : ''
+
+
+  const agentName = agent?.name || 'A'
+  const agentAvatar = agent?.profileImageUrl || agent?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(agentName)}&background=111827&color=fff&size=80`
+
   return (
-    <article style={{ border: '1px solid #eee', borderRadius: 10, overflow: 'hidden', background: '#fff' }}>
-      <div style={{ background: '#e5e7eb', height: 160 }} />
+    <article style={{ border: '1px solid #eee', borderRadius: 10, overflow: 'hidden', background: '#fff', position:'relative' }}>
+      {coverSrc ? (
+        <img
+          src={coverSrc}
+          alt={p.title || 'Property'}
+          style={{ width: '100%', height: 160, objectFit: 'cover', display: 'block' }}
+          onError={()=>{ if (idx < candidates.length - 1) setIdx(idx + 1) }}
+        />
+      ) : (
+        <div style={{ background: '#e5e7eb', height: 160 }} />
+      )}
+      {agent && (
+        <img
+          src={agentAvatar}
+          alt={agentName}
+          onError={(e)=>{ e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(agentName)}&background=111827&color=fff&size=80` }}
+          style={{ position:'absolute', left:10, top:10, width:40, height:40, borderRadius:'50%', border:'2px solid #fff', boxShadow:'0 2px 8px rgba(0,0,0,0.15)', objectFit:'cover' }}
+        />
+      )}
       <div style={{ padding: 12 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
           <h3 style={{ margin: 0, fontSize: 16 }}>{p.title || 'Property'}</h3>
@@ -42,4 +69,21 @@ function descText(p){
   if (p.bathrooms) out.push(`${p.bathrooms} bath`)
   if (p.areaSqm) out.push(`${p.areaSqm} m²`)
   return out.join(' · ')
+}
+
+function toAbsolute(u){ try { return new URL(u, window.location.origin).toString() } catch { return u } }
+function imageCandidates(p){
+  const out=[]
+  try{
+    const push = (u)=>{ if(!u) return; if(typeof u==='string'){ const s=u.trim(); if(s && !out.includes(s)) out.push(s) } else if (u.url||u.src){ const s=(u.url||u.src).trim(); if(s && !out.includes(s)) out.push(s) } }
+    if (Array.isArray(p?.images)) p.images.forEach(push)
+    if (Array.isArray(p?.allImages)) p.allImages.forEach(push)
+    const g = p?.galleries || {}
+    ;['living','kitchen','bedrooms','bathrooms','exterior','floorplan'].forEach(k=>{ const list = Array.isArray(g[k]) ? g[k] : []; list.forEach(push) })
+    ;[p?.coverImage, p?.coverUrl, p?.image, p?.imageUrl, p?.imageURL].forEach(push)
+    if (Array.isArray(p?.imageUrls)) p.imageUrls.forEach(push)
+    if (Array.isArray(p?.photos)) p.photos.forEach(push)
+    if (Array.isArray(p?.media)) p.media.forEach(push)
+  }catch{}
+  return out
 }

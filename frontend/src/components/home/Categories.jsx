@@ -1,6 +1,7 @@
 const cats = [
-  { key: 'apartments', label: 'Apartments', emoji: '🏢' },
-  { key: 'houses', label: 'Houses', emoji: '🏘' },
+  // Map to the "type" values used by filters/properties: apartment | house | commercial | land
+  { key: 'apartment', label: 'Apartments', emoji: '🏢' },
+  { key: 'house', label: 'Houses', emoji: '🏘' },
   { key: 'commercial', label: 'Commercial', emoji: '🏬' },
   { key: 'land', label: 'Land / Plots', emoji: '🌅' },
 ]
@@ -12,7 +13,7 @@ export default function Categories() {
         <h2 style={{ marginBottom: 16 }}>Browse by Category</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
           {cats.map((c) => (
-            <a key={c.key} href={`/browse?category=${c.key}`} style={{
+            <a key={c.key} href={`/properties?type=${encodeURIComponent(c.key)}`} style={{
               border: '1px solid #eee', borderRadius: 10, padding: 16, background: '#fff', textDecoration: 'none', color: '#111827'
             }}>
               <div style={{ fontSize: 28 }}>{c.emoji}</div>

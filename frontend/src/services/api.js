@@ -66,9 +66,10 @@ function loadDemoState() {
   } catch {}
   const initial = {
     users: [
-      { id: 'u-admin', name: 'Demo Admin', email: 'admin@example.com', role: 'admin', status: 'active', createdAt: new Date().toISOString() },
-      { id: 'u-owner', name: 'Owner One', email: 'owner@example.com', role: 'owner', status: 'active', createdAt: new Date().toISOString() },
-      { id: 'u-buyer', name: 'Buyer One', email: 'buyer@example.com', role: 'buyer', status: 'active', createdAt: new Date().toISOString() },
+      // Demo passwords are "1234" for all seeded users
+      { id: 'u-admin', name: 'Demo Admin', email: 'admin@example.com', role: 'admin', password: '1234', status: 'active', createdAt: new Date().toISOString() },
+      { id: 'u-owner', name: 'Owner One', email: 'owner@example.com', role: 'owner', password: '1234', status: 'active', createdAt: new Date().toISOString() },
+      { id: 'u-buyer', name: 'Buyer One', email: 'buyer@example.com', role: 'buyer', password: '1234', status: 'active', createdAt: new Date().toISOString() },
     ],
     agents: [
       { id: 'a-1', name: 'Agent A', email: 'agent@example.com', phone: '+251900000000', status: 'active', createdAt: new Date().toISOString() },
@@ -105,13 +106,23 @@ function createDemoApi() {
   return {
     // Auth
     login: async (body) => {
+      const email = String(body?.email || '').trim().toLowerCase()
+      const password = String(body?.password || '')
+      if (!email || !password) throw new Error('Email and password are required')
       const s = getState()
-      const user = s.users.find(u => u.email === body?.email) || s.users[0]
-      return ok({ token: 'demo-token', user })
+      const user = s.users.find(u => String(u.email||'').toLowerCase() === email)
+      if (!user) throw new Error('Invalid email or password')
+      const userPass = String(user.password || '1234')
+      if (password !== userPass) throw new Error('Invalid email or password')
+      // Issue a simple demo token with sub and role so the app can derive id/role
+      const payload = btoa(JSON.stringify({ sub: user.id, role: user.role }))
+      const token = `demo.${payload}.token`
+      return ok({ token, user })
     },
     register: async (body) => {
       const id = genId('u')
-      const user = { id, name: body?.name || 'New User', email: body?.email || `${id}@example.com`, role: body?.role || 'buyer', status: 'active', createdAt: new Date().toISOString() }
+      const role = body?.role || 'buyer'
+      const user = { id, name: body?.name || 'New User', email: body?.email || `${id}@example.com`, role, password: body?.password || '1234', status: role==='seller'||role==='agent' ? 'pending' : 'active', createdAt: new Date().toISOString() }
       setState(s => ({ ...s, users: [...s.users, user] }))
       return ok({ token: 'demo-token', user })
     },
@@ -129,9 +140,29 @@ function createDemoApi() {
     setUserInactive: async (id) => ok(setState(s => { const user = s.users.find(u => u.id === id); if (user) user.status = 'inactive'; return { ...s } })),
 
     // Properties
-    getProperties: async (params) => {
+    getProperties: async (params = {}) => {
       let items = getState().properties
-      if (params?.ownerId) items = items.filter(p => p.ownerId === params.ownerId)
+      // owner/agent scoped
+      if (params.ownerId) items = items.filter(p => p.ownerId === params.ownerId)
+      if (params.agentId) items = items.filter(p => p.agentId === params.agentId)
+      // type filter (apartment | house | commercial | land)
+      if (params.type) {
+        const t = String(params.type).toLowerCase()
+        items = items.filter(p => String(p.type||'').toLowerCase() === t)
+      }
+      // city filter
+      if (params.city) {
+        const c = String(params.city).toLowerCase()
+        items = items.filter(p => String(p?.location?.city||'').toLowerCase().includes(c))
+      }
+      // price range
+      const min = params.minPrice != null && params.minPrice !== '' ? Number(params.minPrice) : null
+      const max = params.maxPrice != null && params.maxPrice !== '' ? Number(params.maxPrice) : null
+      if (min != null) items = items.filter(p => Number(p.price||0) >= min)
+      if (max != null) items = items.filter(p => Number(p.price||0) <= max)
+      // bedrooms/bathrooms minimums
+      if (params.bedrooms) items = items.filter(p => Number(p.bedrooms||0) >= Number(params.bedrooms))
+      if (params.bathrooms) items = items.filter(p => Number(p.bathrooms||0) >= Number(params.bathrooms))
       return ok(items)
     },
     getProperty: async (id) => ok(getState().properties.find(p => p.id === id) || null),

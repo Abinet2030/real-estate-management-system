@@ -430,7 +430,12 @@ export function MyListings({ ownerId, agentId }) {
       try {
         setError('')
         setLoading(true)
-        if (!ownerId && !agentId) { setItems([]); return }
+        if (!ownerId && !agentId) {
+        
+          setItems([])
+          setLoading(false)
+          return
+        }
         let res = []
         if (ownerId) {
           res = await api.getPropertiesByOwner(ownerId)

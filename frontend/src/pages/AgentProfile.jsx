@@ -42,7 +42,18 @@ export default function AgentProfile() {
     <section style={{ padding: 16 }}>
       <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gap: 16 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: 16, alignItems: 'center' }}>
-          <div style={{ background: '#e5e7eb', height: 160, borderRadius: 8 }} />
+          {(() => {
+            const name = agent?.name || 'A'
+            const avatar = agent?.profileImageUrl || agent?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=111827&color=fff&size=160`
+            return (
+              <img
+                src={avatar}
+                alt={name}
+                style={{ width: 160, height: 160, objectFit: 'cover', borderRadius: 8, background: '#e5e7eb', display: 'block' }}
+                onError={(e)=>{ e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=111827&color=fff&size=160` }}
+              />
+            )
+          })()}
           <div>
             <h2 style={{ margin: '0 0 4px' }}>{agent.name || 'Agent'}</h2>
             <div style={{ color: '#6b7280' }}>{agent.email || ''} {agent.phone ? `· ${agent.phone}` : ''}</div>
@@ -58,7 +69,7 @@ export default function AgentProfile() {
           <h3>Properties by {agent.name || 'agent'}</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
             {properties.map((p) => (
-              <PropertyCard key={p.id || p._id} property={p} />
+              <PropertyCard key={p.id || p._id} property={p} agent={agent} />
             ))}
           </div>
         </div>

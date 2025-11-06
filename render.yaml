@@ -1,41 +1,5 @@
-services:
-  - type: web
-    name: relstate-api
-    env: node
-    plan: free
-    rootDir: server
-    buildCommand: npm ci
-    startCommand: npm start
-    autoDeploy: true
-    healthCheckPath: /api/health
-    envVars:
-      - key: NODE_VERSION
-        value: 20
-      # Provide your production Mongo connection string (recommended)
-      - key: MONGODB_URI
-        sync: false
-      - key: MONGODB_DB
-        value: realestate
-      # Optional: seed an initial admin account on first boot
-      - key: ADMIN_NAME
-        sync: false
-      - key: ADMIN_EMAIL
-        sync: false
-      - key: ADMIN_PASSWORD
-        sync: false
+## Render deployment configuration disabled
+# This file was intentionally neutralized to separate local frontend/backend
+# development from cloud-specific deployment settings. If you plan to deploy to
+# Render again, restore the previous configuration or create a new one.
 
-  - type: static
-    name: relstate-frontend
-    plan: free
-    rootDir: frontend
-    buildCommand: npm ci && npm run build
-    staticPublishPath: dist
-    headers:
-      - path: "/*"
-        name: Cache-Control
-        value: "public, max-age=0, must-revalidate"
-    # After the API service is live, set VITE_API_URL in the Static Site's Environment to the API URL, e.g.:
-    # https://relstate-api.onrender.com/api
-    envVars:
-      - key: VITE_API_URL
-        sync: false
