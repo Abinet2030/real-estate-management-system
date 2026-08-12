@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
 import api from '../services/api'
+import './contact.css'
 
 export default function Contact() {
   const { user } = useAuth()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [senderAddress, setSenderAddress] = useState('')
   const [subject, setSubject] = useState('')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
@@ -19,52 +21,61 @@ export default function Contact() {
     }
   }, [user])
 
-  async function submit(e) {
-    e.preventDefault()
+  async function submit(event) {
+    event.preventDefault()
     setSuccess('')
     setError('')
     try {
       setLoading(true)
-      await api.createSupportTicket({ name, email, subject, message, userId: user?.id || user?._id })
-      setSuccess('Message sent! We will get back to you soon.')
+      await api.createSupportTicket({ name, email, senderAddress, subject, message, userId: user?.id || user?._id })
+      setSuccess('Your inquiry has been sent to the administrator. We will get back to you shortly.')
+      setSenderAddress('')
       setSubject('')
       setMessage('')
     } catch (err) {
-      setError(err.message || 'Failed to send message')
+      setError(err.message || 'Failed to send inquiry')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <main style={{ maxWidth: 800, margin: '0 auto', padding: '24px 16px' }}>
-      <h1 style={{ marginBottom: 8 }}>Contact Admin</h1>
-      <p style={{ color: '#6b7280', marginTop: 0 }}>Buyers and owners can reach the admin team here.</p>
-
-      {success && <div style={{ background:'#ecfdf5', color:'#065f46', border:'1px solid #a7f3d0', padding:'10px 12px', borderRadius: 8, marginBottom: 12 }}>{success}</div>}
-      {error && <div style={{ background:'#fef2f2', color:'#991b1b', border:'1px solid #fecaca', padding:'10px 12px', borderRadius: 8, marginBottom: 12 }}>{error}</div>}
-
-      <form onSubmit={submit} style={{ display: 'grid', gap: 12 }}>
+    <main className="contact-page">
+      <section className="contact-hero">
         <div>
-          <label style={{ display:'block', fontSize:12, color:'#374151' }}>Your Name *</label>
-          <input required value={name} onChange={e=>setName(e.target.value)} style={{ width:'100%', padding:'10px 12px', border:'1px solid #e5e7eb', borderRadius: 8 }} />
+          <p>Relstate support</p>
+          <h1>We’re here to make your next move easier.</h1>
+          <span>Questions about a listing, your account, or using the platform? Send us a note and we’ll point you in the right direction.</span>
         </div>
-        <div>
-          <label style={{ display:'block', fontSize:12, color:'#374151' }}>Your Email *</label>
-          <input required type="email" value={email} onChange={e=>setEmail(e.target.value)} style={{ width:'100%', padding:'10px 12px', border:'1px solid #e5e7eb', borderRadius: 8 }} />
-        </div>
-        <div>
-          <label style={{ display:'block', fontSize:12, color:'#374151' }}>Subject</label>
-          <input value={subject} onChange={e=>setSubject(e.target.value)} style={{ width:'100%', padding:'10px 12px', border:'1px solid #e5e7eb', borderRadius: 8 }} />
-        </div>
-        <div>
-          <label style={{ display:'block', fontSize:12, color:'#374151' }}>Message *</label>
-          <textarea required value={message} onChange={e=>setMessage(e.target.value)} rows={8} style={{ width:'100%', padding:'10px 12px', border:'1px solid #e5e7eb', borderRadius: 8, resize:'vertical' }} />
-        </div>
-        <div style={{ display:'flex', justifyContent:'flex-end', gap:8 }}>
-          <button disabled={loading} type="submit" style={{ padding:'10px 14px', border:'1px solid #111827', background:'#111827', color:'#fff', borderRadius: 8, opacity: loading?0.7:1 }}>{loading?'Sending...':'Send Message'}</button>
-        </div>
-      </form>
+      </section>
+      <section className="contact-shell">
+        <aside className="contact-aside">
+          <p className="contact-kicker">Get in touch</p>
+          <h2>Helpful answers start with a conversation.</h2>
+          <p>Our team supports buyers, owners, and anyone exploring the Relstate marketplace.</p>
+          <div className="contact-options">
+            <article><b>✉</b><div><strong>Email support</strong><span>hello@relstate.example</span></div></article>
+            <article><b>◷</b><div><strong>Typical response time</strong><span>Within one business day</span></div></article>
+            <article><b>⌂</b><div><strong>Need listing help?</strong><span>Include the property title or link.</span></div></article>
+          </div>
+          <div className="contact-note">For a specific property, you can also use the inquiry form directly on its details page.</div>
+        </aside>
+        <section className="contact-form-card">
+          <div className="form-heading"><p>Send an inquiry to admin</p><h2>How can we help?</h2><span>Fields marked with * are required.</span></div>
+          {success && <div className="form-message success">✓ {success}</div>}
+          {error && <div className="form-message error">{error}</div>}
+          <form onSubmit={submit}>
+            <div className="form-grid">
+              <label>Sender name *<input required value={name} onChange={event => setName(event.target.value)} placeholder="Your full name" /></label>
+              <label>Sender email address *<input required type="email" value={email} onChange={event => setEmail(event.target.value)} placeholder="you@example.com" /></label>
+            </div>
+            <label>Sender address <em>(optional)</em><input value={senderAddress} onChange={event => setSenderAddress(event.target.value)} placeholder="Your address" maxLength={500} /></label>
+            <label>What can we help with?<input value={subject} onChange={event => setSubject(event.target.value)} placeholder="For example, a question about a property" /></label>
+            <label>Your message *<textarea required value={message} onChange={event => setMessage(event.target.value)} rows={7} placeholder="Tell us a little more so we can help quickly." /></label>
+            <button className="contact-submit" disabled={loading} type="submit">{loading ? 'Sending inquiry…' : 'Send inquiry to admin'} <span>→</span></button>
+          </form>
+        </section>
+      </section>
     </main>
   )
 }

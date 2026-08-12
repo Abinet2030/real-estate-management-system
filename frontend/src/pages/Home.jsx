@@ -4,7 +4,6 @@ import Hero from '../components/home/Hero'
 import FeaturedProperties from '../components/home/FeaturedProperties'
 import Categories from '../components/home/Categories'
 import HowItWorks from '../components/home/HowItWorks'
-import TopAgents from '../components/home/TopAgents'
 import Testimonials from '../components/home/Testimonials'
 import Stats from '../components/home/Stats'
 import Newsletter from '../components/home/Newsletter'
@@ -16,12 +15,11 @@ export default function Home({ q: qProp = '' }) {
   const qFromUrl = params.get('q') || ''
   const q = String(qProp || '').length ? qProp : qFromUrl
   return (
-    <main>
+    <main className="home-page">
       <Hero />
       <FeaturedProperties q={q} />
       <Categories />
       <HowItWorks />
-      <TopAgents />
       <Testimonials />
       <Stats />
       <Newsletter />

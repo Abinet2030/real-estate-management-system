@@ -2,10 +2,12 @@ export default function AdminSidebar({ activeKey = 'overview', onSelect = () => 
   const menu = [
     { key: 'overview', label: 'Overview' },
     { key: 'users', label: 'Users Management' },
-    { key: 'listings', label: 'Listings Approval' },
-    { key: 'reports', label: 'Reports' },
     { key: 'settings', label: 'Settings' },
     { key: 'inquiries', label: 'Inquiries' },
+    { key: 'add-property', label: 'Add Property' },
+    { key: 'featured', label: 'Featured Properties' },
+    { key: 'edit-home', label: 'Edit Home Page' },
+    { key: 'edit-about', label: 'Edit About Page' },
   ]
   return (
     <>

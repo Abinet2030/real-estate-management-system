@@ -4,9 +4,12 @@ import Home from './Home.jsx'
 import AdminInquiries from '../components/AdminInquiries.jsx'
 import AdminSidebar from '../components/AdminSidebar.jsx'
 import api from '../services/api'
+import { AddListingForm } from './SellerDashboard.jsx'
+import { getPageCopy, savePageCopy } from '../services/siteContent'
 
 export default function AdminDashboard() {
   const [active, setActive] = useState('overview') // overview | users | listings | reports | settings
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [pending, setPending] = useState([])
   const [pendingAgents, setPendingAgents] = useState([])
   const [loading, setLoading] = useState(false)
@@ -172,8 +175,16 @@ export default function AdminDashboard() {
   }
   return (
     <div style={{ minHeight: '100vh', background: '#f9fafb' }}>
-      <AdminSidebar activeKey={active} onSelect={(k) => setActive(k)} />
-      <div style={{ marginLeft: 240, display: 'grid', gridTemplateRows: 'auto 1fr' }}>
+      <AdminSidebar activeKey={active} onSelect={(k) => setActive(k)} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="content-with-sidebar" style={{ display: 'grid', gridTemplateRows: 'auto 1fr' }}>
+        <button
+          className="only-mobile"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open admin menu"
+          style={{ position: 'fixed', top: 14, left: 14, zIndex: 40, padding: '8px 10px', border: 'none', borderRadius: 8, background: '#0f172a', color: '#fff', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.2)' }}
+        >
+          Menu
+        </button>
         <AdminTopBar />
         <main style={{ padding: '24px 16px' }}>
           <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gap: 16 }}>
@@ -442,12 +453,143 @@ export default function AdminDashboard() {
                 </section>
               </>
             )}
+            {active === 'add-property' && <AddListingForm onCreated={() => setActive('listings')} />}
+            {active === 'featured' && <FeaturedPropertyManager />}
+            {active === 'edit-home' && <PageCopyEditor page="home" title="Edit Home Page" />}
+            {active === 'edit-about' && <PageCopyEditor page="about" title="Edit About Page" />}
           </div>
         </main>
       </div>
     </div>
   )
 }
+
+function FeaturedPropertyManager() {
+  const [properties, setProperties] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [editing, setEditing] = useState(null)
+  async function load() {
+    try { setLoading(true); setError(''); setProperties(await api.getManagedProperties()) } catch (err) { setError(err.message || 'Unable to load properties.') } finally { setLoading(false) }
+  }
+  useEffect(() => { load() }, [])
+  const featuredCount = properties.filter(property => property.featured).length
+  async function toggle(property) {
+    const next = !property.featured
+    try {
+      setError('')
+      await api.setPropertyFeatured(property.id || property._id, next)
+      setProperties(current => current.map(item => (item.id || item._id) === (property.id || property._id) ? { ...item, featured: next } : item))
+    } catch (err) { setError(err.message || 'Unable to update featured status.') }
+  }
+  async function remove(property) {
+    const id = property.id || property._id
+    if (!window.confirm(`Permanently delete “${property.title}”? This cannot be undone.`)) return
+    try {
+      setError('')
+      await api.deleteProperty(id)
+      setProperties(current => current.filter(item => (item.id || item._id) !== id))
+    } catch (err) { setError(err.message || 'Unable to delete property.') }
+  }
+  async function saveEdit(event) {
+    event.preventDefault()
+    try {
+      setError('')
+      const form = new FormData(event.currentTarget)
+      const id = editing.id || editing._id
+      const changes = {
+        title: form.get('title'), description: form.get('description'), price: Number(form.get('price')),
+        currency: form.get('currency'), type: form.get('type'), bedrooms: Number(form.get('bedrooms') || 0),
+        bathrooms: Number(form.get('bathrooms') || 0), areaSqm: Number(form.get('areaSqm') || 0),
+        location: { city: form.get('city'), region: form.get('region'), country: form.get('country') },
+        images: String(form.get('images') || '').split(/\r?\n|,/).map(item => item.trim()).filter(Boolean),
+      }
+      const status = form.get('status')
+      if (typeof status === 'string' && status) changes.status = status
+      const updated = await api.updateProperty(id, changes)
+      setProperties(current => current.map(item => (item.id || item._id) === id ? updated.property : item))
+      setEditing(null)
+    } catch (err) { setError(err.message || 'Unable to save property changes.') }
+  }
+  return <section style={{ maxWidth: 900 }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}><div><h2 style={{ margin: 0 }}>Featured Properties</h2><p style={{ color: '#6b7280', marginBottom: 0 }}>Select published listings to show on the Home page. Selected: {featuredCount}</p></div><button onClick={load} style={btnSecondary}>Refresh</button></div>
+    {error && <p style={{ color: '#b91c1c' }}>{error}</p>}
+    {loading ? <p>Loading properties…</p> : properties.length === 0 ? <p style={{ color: '#6b7280', padding: 16, border: '1px dashed #cbd5e1', borderRadius: 10 }}>No properties found.</p> : <div style={{ overflowX: 'auto', border: '1px solid #e5e7eb', borderRadius: 10, background: '#fff' }}><table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 820 }}><thead><tr style={{ background: '#f8fafc' }}><th style={tableCell}>Name</th><th style={tableCell}>Price</th><th style={tableCell}>Status</th><th style={tableCell}>Featured</th><th style={tableCell}>Actions</th></tr></thead><tbody>{properties.map(property => <tr key={property.id || property._id}><td style={tableCell}><strong>{property.title}</strong></td><td style={tableCell}>{property.currency || 'USD'} {Number(property.price || 0).toLocaleString()}</td><td style={tableCell}>{property.status}</td><td style={tableCell}>{property.featured ? 'Yes' : 'No'}</td><td style={tableCell}><div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}><button onClick={() => setEditing(property)} style={btnSecondary}>Edit</button><button onClick={() => toggle(property)} style={property.featured ? btnPrimary : btnSecondary}>{property.featured ? 'Remove Featured' : 'Add Featured'}</button><button onClick={() => remove(property)} style={btnDanger}>Delete Permanently</button></div></td></tr>)}</tbody></table></div>}
+    {editing && <div role="dialog" aria-modal="true" aria-label="Edit property" onMouseDown={event => { if (event.target === event.currentTarget) setEditing(null) }} style={editOverlay}><div style={editModal}><PropertyEditForm property={editing} onSave={saveEdit} onCancel={() => setEditing(null)} /></div></div>}
+  </section>
+}
+
+function PropertyEditForm({ property, onSave, onCancel }) {
+  const location = property.location || {}
+  const [images, setImages] = useState(() => propertyImageUrls(property))
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
+  async function addImages(files) {
+    if (!files.length) return
+    try {
+      setUploading(true); setUploadError('')
+      const result = await api.uploadImages(files)
+      setImages(current => [...new Set([...current, ...(result?.urls || [])])])
+    } catch (error) { setUploadError(error.message || 'Unable to upload images.') } finally { setUploading(false) }
+  }
+  return <form onSubmit={onSave} style={{ display: 'grid', gap: 10 }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><h3 style={{ margin: 0 }}>Edit Property</h3><button type="button" onClick={onCancel} aria-label="Close edit popup" style={closeButton}>×</button></div><p style={{ margin: 0, color: '#64748b', fontSize: 13 }}>{property.title}</p><div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 10 }}><input name="title" defaultValue={property.title} placeholder="Property name" required style={editInput} /><input name="price" type="number" defaultValue={property.price} placeholder="Price" required style={editInput} /><select name="currency" defaultValue={property.currency || 'USD'} style={editInput}><option>USD</option><option>ETB</option><option>EUR</option><option>KES</option><option>RWF</option></select></div><textarea name="description" defaultValue={property.description || ''} placeholder="Description" style={{ ...editInput, minHeight: 70 }} /><div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}><input name="type" defaultValue={property.type || 'house'} placeholder="Type" style={editInput} /><input name="bedrooms" type="number" defaultValue={property.bedrooms || 0} placeholder="Bedrooms" style={editInput} /><input name="bathrooms" type="number" defaultValue={property.bathrooms || 0} placeholder="Bathrooms" style={editInput} /><input name="areaSqm" type="number" defaultValue={property.areaSqm || 0} placeholder="Area m²" style={editInput} /></div><div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}><input name="city" defaultValue={location.city || ''} placeholder="City" style={editInput} /><input name="region" defaultValue={location.region || ''} placeholder="Region" style={editInput} /><input name="country" defaultValue={location.country || ''} placeholder="Country" style={editInput} /></div><div><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 7 }}><span style={{ color: '#475569', fontSize: 13 }}>Pictures ({images.length})</span><label style={{ ...btnSecondary, cursor: uploading ? 'wait' : 'pointer' }}>{uploading ? 'Uploading…' : 'Upload pictures'}<input type="file" accept="image/*" multiple disabled={uploading} style={{ display: 'none' }} onChange={event => { addImages(Array.from(event.target.files || [])); event.target.value = '' }} /></label></div>{images.length > 0 && <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 8, marginBottom: 8 }}>{images.map((url, index) => <div key={`${url}-${index}`} style={{ position: 'relative' }}><img src={url} alt={`Property picture ${index + 1}`} style={{ display: 'block', width: '100%', height: 82, objectFit: 'cover', borderRadius: 7, border: '1px solid #cbd5e1' }} /><button type="button" onClick={() => setImages(current => current.filter((_, imageIndex) => imageIndex !== index))} aria-label={`Remove picture ${index + 1}`} style={{ position: 'absolute', top: 4, right: 4, padding: '2px 6px', border: '1px solid #cbd5e1', borderRadius: 5, background: '#fff', cursor: 'pointer' }}>Remove</button></div>)}</div>}<label style={{ color: '#475569', fontSize: 13 }}>Picture URLs: one URL per line<textarea name="images" value={images.join('\n')} onChange={event => setImages(event.target.value.split(/\r?\n|,/).map(url => url.trim()).filter(Boolean))} style={{ ...editInput, minHeight: 90, marginTop: 5 }} /></label>{uploadError && <p style={{ margin: '6px 0 0', color: '#b91c1c', fontSize: 13 }}>{uploadError}</p>}</div><div><button type="submit" style={btnPrimary}>Save Changes</button><button type="button" onClick={onCancel} style={{ ...btnSecondary, marginLeft: 8 }}>Cancel</button></div></form>
+}
+
+function propertyImageUrls(property) {
+  const urls = []
+  const add = value => {
+    const url = typeof value === 'string' ? value : value?.url || value?.src
+    if (url?.trim() && !urls.includes(url.trim())) urls.push(url.trim())
+  }
+  ;[property?.images, property?.allImages, property?.imageUrls, property?.photos, property?.media].filter(Array.isArray).forEach(list => list.forEach(add))
+  ;[property?.coverImage, property?.coverUrl, property?.image, property?.imageUrl].forEach(add)
+  return urls
+}
+
+const tableCell = { padding: '12px 10px', borderBottom: '1px solid #e5e7eb', textAlign: 'left', whiteSpace: 'nowrap' }
+const editInput = { width: '100%', boxSizing: 'border-box', padding: '9px 10px', border: '1px solid #cbd5e1', borderRadius: 7, font: 'inherit' }
+const editOverlay = { position: 'fixed', inset: 0, zIndex: 100, display: 'grid', placeItems: 'center', padding: 20, background: 'rgba(15, 23, 42, 0.58)' }
+const editModal = { width: 'min(760px, 100%)', maxHeight: '90vh', overflowY: 'auto', padding: 20, borderRadius: 12, background: '#fff', boxShadow: '0 20px 60px rgba(15,23,42,.28)' }
+const closeButton = { border: 0, background: 'transparent', color: '#64748b', fontSize: 26, lineHeight: 1, cursor: 'pointer' }
+
+function PageCopyEditor({ page, title }) {
+  const [copy, setCopy] = useState(() => getPageCopy(page))
+  const [saved, setSaved] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
+  function submit(event) { event.preventDefault(); savePageCopy(page, copy); setSaved(true) }
+  async function uploadHero(file) {
+    if (!file || !file.type.startsWith('image/')) { setUploadError('Please choose an image file.'); return }
+    if (file.size > 5 * 1024 * 1024) { setUploadError('Hero images must be 5 MB or smaller.'); return }
+    try {
+      setUploadError(''); setUploading(true)
+      const result = await api.uploadImages([file])
+      const url = result?.urls?.[0]
+      if (!url) throw new Error('No image URL returned')
+      setCopy(current => ({ ...current, heroImage: url }))
+    } catch (error) { setUploadError(error.message || 'Image upload failed.') } finally { setUploading(false) }
+  }
+  return <section style={{ maxWidth: 720, padding: 20, border: '1px solid #e5e7eb', borderRadius: 12, background: '#fff' }}>
+    <h2 style={{ marginTop: 0 }}>{title}</h2><p style={{ color: '#6b7280' }}>Update the hero text shown on the live page.</p>
+    {saved && <p style={{ color: '#15803d' }}>Changes saved. They appear when the page is opened.</p>}
+    <form onSubmit={submit} style={{ display: 'grid', gap: 14 }}>
+      <label>Eyebrow text<input required value={copy.kicker} onChange={e => setCopy({ ...copy, kicker: e.target.value })} style={editorInput} /></label>
+      <label>Heading<input required value={copy.title} onChange={e => setCopy({ ...copy, title: e.target.value })} style={editorInput} /></label>
+      <label>Description<textarea required rows={4} value={copy.description} onChange={e => setCopy({ ...copy, description: e.target.value })} style={editorInput} /></label>
+      {page === 'home' && <><label>Hero image URL<input required type="url" value={copy.heroImage || ''} onChange={e => setCopy({ ...copy, heroImage: e.target.value })} placeholder="https://example.com/hero-image.jpg" style={editorInput} /></label>
+        <div onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); uploadHero(event.dataTransfer.files?.[0]) }} style={{ padding: 22, border: '2px dashed #94a3b8', borderRadius: 10, background: '#f8fafc', textAlign: 'center', color: '#475569' }}>
+          <strong>{uploading ? 'Uploading image…' : 'Drag and drop a hero image here'}</strong><br />
+          <label style={{ display: 'inline-block', marginTop: 10, padding: '8px 12px', borderRadius: 7, background: '#0f172a', color: '#fff', cursor: 'pointer' }}>Browse image<input type="file" accept="image/*" onChange={event => uploadHero(event.target.files?.[0])} style={{ display: 'none' }} /></label>
+          <div style={{ marginTop: 8, fontSize: 12 }}>JPG, PNG, or WebP · maximum 5 MB</div>
+        </div>
+        {copy.heroImage && <img src={copy.heroImage} alt="Hero preview" style={{ width: '100%', maxHeight: 180, objectFit: 'cover', borderRadius: 8 }} />}
+        {uploadError && <p style={{ margin: 0, color: '#b91c1c' }}>{uploadError}</p>}</>}
+      <button type="submit" style={btnPrimary}>Save page changes</button>
+    </form>
+  </section>
+}
+
+const editorInput = { display: 'block', boxSizing: 'border-box', width: '100%', marginTop: 6, padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8, font: 'inherit' }
 
 function Card({ title, desc }) {
   return (

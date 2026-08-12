@@ -15,8 +15,11 @@ const DEMO_PROPERTIES = [
     areaSqm: 220,
     location: { city: 'Addis Ababa', region: 'Addis Ababa', country: 'Ethiopia' },
     images: [
-      'https://images.unsplash.com/photo-1560185008-b033106af2f1?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1575517111478-7f6dbfbfb9d1?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1560185008-b033106af2f1?auto=format&w=2400&q=90',
+      'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&w=2400&q=90',
+      'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&w=2400&q=90',
+      'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&w=2400&q=90',
+      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&w=2400&q=90',
     ],
     status: 'published',
     createdAt: new Date().toISOString(),
@@ -33,7 +36,10 @@ const DEMO_PROPERTIES = [
     areaSqm: 85,
     location: { city: 'Nairobi', region: 'Nairobi', country: 'Kenya' },
     images: [
-      'https://images.unsplash.com/photo-1502673530728-f79b4cab31b1?q=80&w=1200&auto=format&fit=crop',
+      '/api/uploads/city-view-apartment-01.jpg',
+      '/api/uploads/city-view-apartment-02.jpg',
+      '/api/uploads/city-view-apartment-03.jpg',
+      '/api/uploads/city-view-apartment-04.jpg',
     ],
     status: 'published',
     createdAt: new Date().toISOString(),
@@ -50,15 +56,30 @@ const DEMO_PROPERTIES = [
     areaSqm: 32,
     location: { city: 'Kigali', region: 'Kigali', country: 'Rwanda' },
     images: [
-      'https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=1200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&w=2400&q=90',
+      'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&w=2400&q=90',
+      'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&w=2400&q=90',
+      'https://images.unsplash.com/photo-1615873968403-89e068629265?auto=format&w=2400&q=90',
+      'https://images.unsplash.com/photo-1615529162924-f8605388461d?auto=format&w=2400&q=90',
     ],
     status: 'published',
     createdAt: new Date().toISOString(),
   },
 ]
 
+function getDemoProperty(id) {
+  const property = DEMO_PROPERTIES.find(item => item.id === String(id))
+  return property ? {
+    ...property,
+    ownerId: 'u-owner',
+    owner: { name: 'Owner One', email: 'owner@example.com', phone: '+251 900 000 000', role: 'seller' },
+    features: ['Private garden', 'Secure parking', 'Balcony', 'Modern kitchen', '24/7 security'],
+  } : null
+}
+
 // Simple localStorage-backed demo state when running frontend-only
-const DEMO_STORE_KEY = 'demo:state:v1'
+// Bumped to load the expanded ordered photo set in existing frontend-only demos.
+const DEMO_STORE_KEY = 'demo:state:v2'
 function loadDemoState() {
   try {
     const raw = localStorage.getItem(DEMO_STORE_KEY)
@@ -172,6 +193,8 @@ function createDemoApi() {
       return ok(prop)
     },
     getPublishedProperties: async () => ok(getState().properties.filter(p => p.status === 'published')),
+    getManagedProperties: async () => ok(getState().properties),
+    setPropertyFeatured: async (id, featured) => ok(setState(s => ({ ...s, properties: s.properties.map(p => p.id === id ? { ...p, featured } : p) }))),
     getPropertiesByOwner: async (ownerId) => ok(getState().properties.filter(p => p.ownerId === ownerId)),
 
     // Inquiries
@@ -331,6 +354,7 @@ async function uploadImages(files) {
   ;(files || []).forEach(f => fd.append('files', f))
   const res = await fetch(url.toString(), {
     method: 'POST',
+    body: fd,
     headers: {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       // Note: no Content-Type; browser sets multipart boundary
@@ -342,7 +366,10 @@ async function uploadImages(files) {
 
 const liveApi = {
   getProperties: (params) => request('/properties', { params }),
-  getProperty: (id) => request(`/properties/${id}`),
+  getManagedProperties: () => request('/properties/manage'),
+  // The development homepage can render fallback sample cards while the API is offline.
+  // Resolve those non-Mongo IDs locally so their “More” links remain usable.
+  getProperty: (id) => getDemoProperty(id) || request(`/properties/${id}`),
   getUsers: (params) => request('/users', { params }),
   getAgents: (params) => request('/agents', { params }),
   getAgent: (id) => request(`/agents/${id}`),
@@ -360,9 +387,12 @@ const liveApi = {
   setUserInactive: (id) => request(`/users/${id}/reject`, { method: 'POST' }),
   // Properties
   createProperty: (body) => request('/properties', { method: 'POST', body }),
+  setPropertyFeatured: (id, featured) => request(`/properties/${id}`, { method: 'PATCH', body: { featured } }),
+  updateProperty: (id, body) => request(`/properties/${id}`, { method: 'PATCH', body }),
+  deleteProperty: (id) => request(`/properties/${id}`, { method: 'DELETE' }),
   getPublishedProperties: () => {
     if (USE_DEMO) return Promise.resolve(DEMO_PROPERTIES)
-    return request('/properties/published')
+    return request('/properties/published', { timeoutMs: 2500 })
   },
   getPropertiesByOwner: (ownerId) => request('/properties/by-owner', { params: { ownerId } }),
   // Inquiries

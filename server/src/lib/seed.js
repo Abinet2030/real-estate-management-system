@@ -12,9 +12,17 @@ export async function seedAdminIfNeeded() {
   if (!name || !email || !password) return; // seeding disabled
 
   const existing = await User.findOne({ email });
-  if (existing) return;
-
   const passwordHash = await bcrypt.hash(password, 10);
+  if (existing) {
+    existing.name = name;
+    existing.passwordHash = passwordHash;
+    existing.role = 'admin';
+    existing.status = 'active';
+    await existing.save();
+    console.log(`Updated admin user: ${email}`);
+    return;
+  }
+
   await User.create({ name, email, passwordHash, role: 'admin' });
   console.log(`Seeded admin user: ${email}`);
 }
@@ -73,7 +81,14 @@ export async function seedFromFixtures() {
       if (!ownerId && !agentId) continue;
 
       const existing = await Property.findOne({ title: p.title, ...(ownerId ? { ownerId } : {}) });
-      if (existing) continue;
+      if (existing) {
+        // Only enrich fixture listings that have no photos yet; never replace user uploads.
+        if ((!Array.isArray(existing.images) || existing.images.length === 0) && Array.isArray(p.images) && p.images.length > 0) {
+          existing.images = p.images;
+          await existing.save();
+        }
+        continue;
+      }
 
       await Property.create({
         title: p.title,

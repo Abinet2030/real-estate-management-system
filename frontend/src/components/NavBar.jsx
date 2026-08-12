@@ -1,8 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
 import ChatSidebar from './ChatSidebar.jsx'
-import DirectoryMenu from './DirectoryMenu.jsx'
 import api from '../services/api'
 
 export default function NavBar() {
@@ -45,19 +44,9 @@ export default function NavBar() {
 
         <div className="nav-links">
           <Link to="/" style={{ padding:'6px 10px', borderRadius:8, textDecoration:'none', color:'#334155' }}>Home</Link>
-          {String(user?.role).toLowerCase() === 'buyer' ? (
-            <DirectoryMenu />
-          ) : (
-            <Link to="/agents" style={{ padding:'6px 10px', borderRadius:8, textDecoration:'none', color:'#334155' }}>Agents</Link>
-          )}
+          <Link to="/properties" style={{ padding:'6px 10px', borderRadius:8, textDecoration:'none', color:'#334155' }}>Properties</Link>
           <Link to="/about" style={{ padding:'6px 10px', borderRadius:8, textDecoration:'none', color:'#334155' }}>About</Link>
           <Link to="/contact" style={{ padding:'6px 10px', borderRadius:8, textDecoration:'none', color:'#334155' }}>Contact</Link>
-          {String(user?.role).toLowerCase() === 'agent' && (
-            <Link to="/agent/listings" style={{ padding:'6px 10px', borderRadius:8, textDecoration:'none', color:'#111827', fontWeight:600 }}>My Listings</Link>
-          )}
-          {String(user?.role).toLowerCase() === 'agent' && (
-            <Link to="/agent/add" style={{ padding:'6px 12px', borderRadius:8, textDecoration:'none', background:'#111827', color:'#fff', fontWeight:600 }}>Add Property</Link>
-          )}
         </div>
 
         <div className="nav-actions">
@@ -102,19 +91,9 @@ export default function NavBar() {
       <div className={`mobile-panel ${menuOpen ? 'open' : ''}`}>
         <div className="nav-links" style={{ display: 'grid' }}>
           <Link to="/" onClick={()=>setMenuOpen(false)} style={{ padding:'8px 10px' }}>Home</Link>
-          {String(user?.role).toLowerCase() === 'buyer' ? (
-            <DirectoryMenu />
-          ) : (
-            <Link to="/agents" onClick={()=>setMenuOpen(false)} style={{ padding:'8px 10px' }}>Agents</Link>
-          )}
+          <Link to="/properties" onClick={()=>setMenuOpen(false)} style={{ padding:'8px 10px' }}>Properties</Link>
           <Link to="/about" onClick={()=>setMenuOpen(false)} style={{ padding:'8px 10px' }}>About</Link>
           <Link to="/contact" onClick={()=>setMenuOpen(false)} style={{ padding:'8px 10px' }}>Contact</Link>
-          {String(user?.role).toLowerCase() === 'agent' && (
-            <Link to="/agent/listings" onClick={()=>setMenuOpen(false)} style={{ padding:'8px 10px' }}>My Listings</Link>
-          )}
-          {String(user?.role).toLowerCase() === 'agent' && (
-            <Link to="/agent/add" onClick={()=>setMenuOpen(false)} style={{ padding:'8px 10px' }}>Add Property</Link>
-          )}
           {!user ? (
             <Link to="/login" onClick={()=>setMenuOpen(false)} style={{ padding:'8px 10px' }}>Login</Link>
           ) : (

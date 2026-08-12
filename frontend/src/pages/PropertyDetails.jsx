@@ -1,344 +1,154 @@
-import { useEffect, useState, useCallback } from 'react'
-import { useLocation, useParams } from 'react-router-dom'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext.jsx'
+import './property-details.css'
 
 export default function PropertyDetails() {
   const { id } = useParams()
-  // Normalize id in case a legacy redirect or bad link provided a literal ":id"
   const normalizedId = String(id || '').replace(/^:/, '')
-  const location = useLocation()
-  const inquiryIdFromState = location?.state?.inquiryId || ''
   const { user } = useAuth()
+  const location = useLocation()
   const [item, setItem] = useState(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  // inquiry state
+  const [activeImage, setActiveImage] = useState(0)
+  const [viewerOpen, setViewerOpen] = useState(false)
   const [buyerName, setBuyerName] = useState('')
   const [buyerEmail, setBuyerEmail] = useState('')
+  const [senderAddress, setSenderAddress] = useState('')
   const [message, setMessage] = useState('')
-  const [inqLoading, setInqLoading] = useState(false)
-  const [inqSuccess, setInqSuccess] = useState('')
-  // attachments passed via inquiry (when coming from Inquiries → Open property)
-  const [convAttachments, setConvAttachments] = useState([])
-  // main image index for gallery (must be declared before any early returns)
-  const [imgIdx, setImgIdx] = useState(0)
-  const [showAllPhotos, setShowAllPhotos] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState('')
 
-  const fetchItem = useCallback(async () => {
-    let cancelled = false
+  const loadProperty = useCallback(async () => {
     setLoading(true)
     setError('')
     try {
-      const res = await api.getProperty(normalizedId)
-      const data = Array.isArray(res) ? res[0] : (res.data ?? res)
-      if (!cancelled) setItem(data)
-    } catch (e) {
-      console.error('PropertyDetails: failed to load property', { id: normalizedId, error: e?.message || e })
-      setError(e.message || 'Failed to load property')
+      const response = await api.getProperty(normalizedId)
+      const property = Array.isArray(response) ? response[0] : (response?.data ?? response?.property ?? response)
+      if (!property) throw new Error('Property not found')
+      setItem(property)
+      setActiveImage(0)
+    } catch (err) {
+      setError(err.message || 'Failed to load property')
     } finally {
       setLoading(false)
     }
-    return () => { cancelled = true }
   }, [normalizedId])
 
+  useEffect(() => { loadProperty() }, [loadProperty])
   useEffect(() => {
-    // initial load
-    fetchItem()
-  }, [fetchItem])
-
-  // If navigated here with an inquiry id, load its attachments and show them
-  useEffect(() => {
-    let cancelled = false
-    async function loadInquiry() {
-      if (!inquiryIdFromState) { setConvAttachments([]); return }
-      try {
-        const data = await api.getInquiry(inquiryIdFromState)
-        const msgs = Array.isArray(data?.messages) ? data.messages : []
-        const urls = []
-        msgs.forEach(m => {
-          if (Array.isArray(m.attachments)) urls.push(...m.attachments.filter(Boolean))
-        })
-        if (!cancelled) setConvAttachments(urls)
-      } catch {
-        if (!cancelled) setConvAttachments([])
-      }
-    }
-    loadInquiry()
-    return () => { cancelled = true }
-  }, [inquiryIdFromState])
-
-  useEffect(() => {
-    if (window.location.hash === '#contact' && !loading) {
-      const el = document.getElementById('contact')
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth' })
-        // Focus the first form input after a brief delay
-        setTimeout(() => {
-          const input = el.querySelector('input[required]')
-          if (input) input.focus()
-        }, 500)
-      }
-    }
-  }, [loading])
-
-  // Prefill inquiry form if user is logged in
-  useEffect(() => {
-    if (user && user.name && user.email) {
-      setBuyerName(user.name)
-      setBuyerEmail(user.email)
-    }
+    if (user?.name) setBuyerName(user.name)
+    if (user?.email) setBuyerEmail(user.email)
   }, [user])
+  useEffect(() => {
+    if (!loading && location.hash === '#contact') document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })
+  }, [loading, location.hash])
 
-  if (loading) return <section style={{ padding: 16 }}>Loading...</section>
-  if (error) return (
-    <section style={{ padding: 16 }}>
-      <div style={{ border: '1px solid #fecaca', background: '#fef2f2', color: '#7f1d1d', borderRadius: 10, padding: 12 }}>
-        <div style={{ fontWeight: 800, marginBottom: 6 }}>Failed to load property</div>
-        <div style={{ fontSize: 14, marginBottom: 6 }}>{error}</div>
-        <div style={{ fontSize: 12, color: '#991b1b', opacity: 0.9 }}>ID: {normalizedId}</div>
-        <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
-          <button onClick={fetchItem} style={{ padding: '8px 12px', border: '1px solid #ef4444', background: '#ef4444', color: '#fff', borderRadius: 6, cursor: 'pointer' }}>Retry</button>
-          <a href="/properties" style={{ padding: '8px 12px', border: '1px solid #e5e7eb', background: '#fff', color: '#111827', borderRadius: 6 }}>Browse listings</a>
-        </div>
-      </div>
-    </section>
-  )
-  if (!item) return <section style={{ padding: 16 }}>No property found.</section>
+  if (loading) return <div className="property-loading">Loading property…</div>
+  if (error) return <div className="property-error"><h2>Unable to open this property</h2><p>{error}</p><button onClick={loadProperty}>Try again</button><Link to="/properties">Back to properties</Link></div>
+  if (!item) return null
 
-  // derive images list from item
-  const imgs = imageCandidates(item)
+  const images = imageCandidates(item)
+  const current = Math.min(activeImage, Math.max(images.length - 1, 0))
+  const amenities = Array.isArray(item.features) ? item.features : (Array.isArray(item.amenities) ? item.amenities : [])
+  const contactTitle = 'Send inquiry to admin'
+
+  async function sendInquiry(event) {
+    event.preventDefault()
+    setSent('')
+    try {
+      setSending(true)
+      await api.createSupportTicket({
+        name: buyerName,
+        email: buyerEmail,
+        senderAddress,
+        subject: `Property inquiry: ${item.title || 'Property'}`,
+        message: `Property: ${item.title || normalizedId}\nProperty ID: ${item.id || item._id || normalizedId}\n\n${message || 'No message provided.'}`,
+        userId: user?.id || user?._id,
+      })
+      setSent('Your inquiry has been sent to the administrator. We will get back to you shortly.')
+      setSenderAddress('')
+      setMessage('')
+    } catch (err) { window.alert(err.message || 'Unable to send inquiry') } finally { setSending(false) }
+  }
 
   return (
-    <section style={{ padding: 16 }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gap: 16 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          <div style={{ border: '1px solid #eee', borderRadius: 10, overflow: 'hidden', position:'relative' }}>
-            {imgs.length ? (
-              <img src={toAbsolute(imgs[Math.min(imgIdx, imgs.length-1)])} alt={item?.title || 'Property'} style={{ width: '100%', height: 320, objectFit: 'cover', display: 'block' }} />
-            ) : (
-              <div style={{ background: '#e5e7eb', height: 320 }} />
-            )}
-            {imgs.length > 1 && (
-              <button onClick={()=> setShowAllPhotos(true)} style={{ position:'absolute', right:8, bottom:8, padding:'8px 10px', background:'#111827', color:'#fff', border:'none', borderRadius:6, cursor:'pointer' }}>
-                View all photos ({imgs.length})
-              </button>
-            )}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 8, padding: 8 }}>
-              {(imgs.length ? imgs : []).map((u, i)=> (
-                u ? (
-                  <button key={i} onClick={()=> setImgIdx(i)} title="View image" style={{ padding:0, border:'none', background:'transparent', cursor:'pointer' }}>
-                    <img src={toAbsolute(u)} alt="thumb" style={{ width:'100%', height: 80, objectFit:'cover', borderRadius:6, border: '1px solid #eee' }} />
-                  </button>
-                ) : (
-                  <div key={i} style={{ background:'#e5e7eb', height:80, borderRadius:6 }} />
-                )
-              ))}
+    <main className="property-page">
+      <div className="property-shell">
+        <Link className="back-link" to="/properties">← Browse all properties</Link>
+        <div className="property-heading">
+          <div><p className="property-status">{statusLabel(item.status)}</p><h1>{item.title || 'Property'}</h1><p className="property-location">⌖ {formatLocation(item.location)}</p></div>
+          <div className="property-price">{formatCurrency(item.price, item.currency)}</div>
+        </div>
+
+        <section className="property-hero-grid">
+          <ImmersiveGallery images={images} title={item.title} index={current} onChange={setActiveImage} onOpen={() => setViewerOpen(true)} />
+          <aside className="property-summary">
+            <p className="eyebrow">{String(item.type || 'Property').toUpperCase()} · {statusLabel(item.status)}</p>
+            <h2>{formatCurrency(item.price, item.currency)}</h2>
+            <div className="property-specs">
+              <Fact icon="▣" label="Bedrooms" value={item.bedrooms ?? '—'} />
+              <Fact icon="◫" label="Bathrooms" value={item.bathrooms ?? '—'} />
+              <Fact icon="⌑" label="Area" value={item.areaSqm ? `${item.areaSqm} m²` : '—'} />
+              <Fact icon="⌂" label="Type" value={capitalize(item.type) || '—'} />
             </div>
-            {convAttachments.length > 0 && (
-              <div style={{ padding: 8, borderTop: '1px solid #eee', background: '#fafafa' }}>
-                <div style={{ fontWeight: 700, marginBottom: 8, fontSize: 14 }}>Conversation Attachments</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {convAttachments.slice(0, 12).map((u, i) => (
-                    <a key={i} href={u} target="_blank" rel="noreferrer" title="Open attachment">
-                      <img src={u} alt="attachment" style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff' }} />
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
+            <button className="primary-action" onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}>Inquire about this property</button>
+            <p className="summary-note">Available for inquiries · Photos shown in original aspect ratio</p>
+          </aside>
+        </section>
+
+        <section className="detail-layout">
+          <div className="detail-content">
+            <article className="detail-card"><h2>About this property</h2><p>{item.description || 'No description has been provided for this property.'}</p></article>
+            <article className="detail-card"><h2>Property details</h2><div className="detail-facts"><Detail label="Property type" value={capitalize(item.type)} /><Detail label="Availability" value={statusLabel(item.status)} /><Detail label="Location" value={formatLocation(item.location)} /><Detail label="Address" value={item.location?.address || '—'} /><Detail label="Bedrooms" value={item.bedrooms ?? '—'} /><Detail label="Bathrooms" value={item.bathrooms ?? '—'} /><Detail label="Area / size" value={item.areaSqm ? `${item.areaSqm} m²` : '—'} /></div></article>
+            <article className="detail-card"><h2>Amenities</h2>{amenities.length ? <div className="amenity-list">{amenities.map((amenity, index) => <span key={`${amenity}-${index}`}>✓ {amenity}</span>)}</div> : <p className="muted">Amenities have not been listed yet.</p>}</article>
           </div>
-          <div style={{ display: 'grid', gap: 8 }}>
-            <h2 style={{ margin: 0 }}>{item.title || 'Property'}</h2>
-            <div style={{ color: '#16a34a', fontWeight: 800, fontSize: 20 }}>{formatCurrency(item.price, item.currency)}</div>
-            <div style={{ color: '#6b7280' }}>{formatLocation(item.location)}</div>
-            <div style={{ color: '#374151' }}>{String(item.type || '').toUpperCase()} {item.areaSqm ? `· ${item.areaSqm} m²` : ''}</div>
-            {/* Specs grid */}
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(140px, 1fr))', gap:8, marginTop:8 }}>
-              <Spec label="Bedrooms" value={item.bedrooms} />
-              <Spec label="Bathrooms" value={item.bathrooms} />
-              <Spec label="Area" value={item.areaSqm ? `${item.areaSqm} m²` : '—'} />
-              <Spec label="Type" value={String(item.type||'—').toUpperCase()} />
-              <Spec label="City" value={item.location?.city || '—'} />
-              <Spec label="Region" value={item.location?.region || '—'} />
-              <Spec label="Country" value={item.location?.country || '—'} />
-              <Spec label="Address" value={item.location?.address || '—'} />
-            </div>
-            <p>{item.description || 'No description provided.'}</p>
-            <div id="contact" style={{ border: '1px solid #e5e7eb', borderRadius: 10, padding: 12 }}>
-              <h3 style={{ marginTop: 0 }}>Contact Owner</h3>
-              {inqSuccess && <div style={{ background:'#ecfdf5', color:'#065f46', border:'1px solid #a7f3d0', padding:'8px 10px', borderRadius:8, marginBottom:8 }}>{inqSuccess}</div>}
-              <form onSubmit={async (e)=>{
-                e.preventDefault()
-                setInqSuccess('')
-                try{
-                  setInqLoading(true)
-                  const body = { propertyId: item.id || id, ownerId: item.ownerId, buyerName, buyerEmail, message }
-                  if (!body.ownerId) throw new Error('Owner not available for this listing.')
-                  await api.createInquiry(body)
-                  setInqSuccess('Your message was sent to the owner. They will reply in the Inquiries section.')
-                  setMessage('')
-                }catch(e2){ setError(e2.message) } finally{ setInqLoading(false) }
-              }} style={{ display:'grid', gap:8 }}>
-                <div>
-                  <label style={{ display:'block', fontSize:13, color:'#374151' }}>Your Name *</label>
-                  <input required value={buyerName} onChange={e=>setBuyerName(e.target.value)} style={{ width:'100%', padding:'8px 10px', border:'1px solid #e5e7eb', borderRadius:8 }} />
-                </div>
-                <div>
-                  <label style={{ display:'block', fontSize:13, color:'#374151' }}>Your Email *</label>
-                  <input required type="email" value={buyerEmail} onChange={e=>setBuyerEmail(e.target.value)} style={{ width:'100%', padding:'8px 10px', border:'1px solid #e5e7eb', borderRadius:8 }} />
-                </div>
-                <div>
-                  <label style={{ display:'block', fontSize:13, color:'#374151' }}>Message</label>
-                  <textarea value={message} onChange={e=>setMessage(e.target.value)} style={{ width:'100%', minHeight:80, padding:'8px 10px', border:'1px solid #e5e7eb', borderRadius:8 }} />
-                </div>
-                <div>
-                  <button disabled={inqLoading} type="submit" style={{ padding:'10px 14px', border:'1px solid #111827', background:'#111827', color:'#fff', borderRadius:6 }}>{inqLoading?'Sending...':'Send Message'}</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-        {/* Room-by-room galleries */}
-        {renderGalleries(item?.galleries, imgs, setImgIdx)}
-        <div style={{ border: '1px solid #e5e7eb', borderRadius: 12, padding: 12, background:'#fff' }}>
-          <h3 style={{ marginTop:0 }}>Features</h3>
-          <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-            {(item.features && item.features.length ? item.features : ['Parking','Balcony','Secure Area']).map((f, i)=> (
-              <Pill key={`${f}-${i}`} text={f} />
-            ))}
-          </div>
-        </div>
-        <div style={{ border: '1px solid #e5e7eb', borderRadius: 12, padding: 12, background:'#fff' }}>
-          <h3 style={{ marginTop:0 }}>Agent / Owner</h3>
-          <AgentCard agent={item.agent} owner={item.owner} />
-        </div>
-        <div style={{ height: 300, border: '1px solid #eee', borderRadius: 10, padding: 12 }}>
-          <h3>Map</h3>
-          <div style={{ background: '#e5e7eb', height: '100%', borderRadius: 8 }} />
-        </div>
-        {/* Modal: all photos */}
-        <PhotosModal open={showAllPhotos} onClose={()=> setShowAllPhotos(false)} images={imgs} onSelect={setImgIdx} />
+          <aside className="contact-card" id="contact"><p className="eyebrow">Interested in this property?</p><h2>{contactTitle}</h2><ContactPerson agent={item.agent} owner={item.owner} fallbackId={item.agentId || item.ownerId} /><form onSubmit={sendInquiry}><label>Your name<input required value={buyerName} onChange={e => setBuyerName(e.target.value)} /></label><label>Email address<input required type="email" value={buyerEmail} onChange={e => setBuyerEmail(e.target.value)} /></label><label>Message<textarea value={message} onChange={e => setMessage(e.target.value)} placeholder={`I'm interested in ${item.title}.`} /></label>{sent && <p className="inquiry-success">{sent}</p>}<button className="primary-action" disabled={sending}>{sending ? 'Sending…' : 'Send inquiry'}</button></form></aside>
+        </section>
       </div>
-    </section>
+      <ImageViewer open={viewerOpen} images={images} index={current} title={item.title} onChange={setActiveImage} onClose={() => setViewerOpen(false)} />
+    </main>
   )
 }
 
-// Simple modal to show all photos in a grid
-function PhotosModal({ open, onClose, images, onSelect }){
-  if (!open) return null
-  return (
-    <div onClick={onClose} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', zIndex:1000, display:'grid', placeItems:'center', padding:16 }}>
-      <div onClick={(e)=> e.stopPropagation()} style={{ width:'min(1100px, 96vw)', maxHeight:'90vh', overflow:'auto', background:'#fff', borderRadius:12, padding:12 }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
-          <div style={{ fontWeight:800 }}>All Photos ({images.length})</div>
-          <button onClick={onClose} style={{ border:'1px solid #e5e7eb', background:'#fff', borderRadius:6, padding:'6px 10px', cursor:'pointer' }}>Close</button>
-        </div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(160px, 1fr))', gap:10 }}>
-          {images.map((u, i)=> (
-            <button key={i} onClick={()=> { onSelect?.(i); onClose?.() }} title="Select" style={{ padding:0, border:'none', background:'transparent', cursor:'pointer' }}>
-              <img src={toAbsolute(u)} alt={`photo-${i}`} style={{ width:'100%', height:160, objectFit:'cover', borderRadius:8, border:'1px solid #e5e7eb', background:'#fff' }} />
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
+function ImmersiveGallery({ images, title, index, onChange, onOpen }) {
+  if (!images.length) return <div className="gallery-empty">No property photos available</div>
+  const select = next => onChange((next + images.length) % images.length)
+  return <div className="immersive-gallery"><button className="gallery-main" onClick={onOpen} aria-label="Open full-screen photo viewer"><img src={toAbsolute(images[index])} alt={title || 'Property'} /><span className="gallery-overlay"><b>Immersive photo tour</b><small>Open image viewer</small></span></button>{images.length > 1 && <><button className="gallery-arrow previous" onClick={() => select(index - 1)} aria-label="Previous photo">‹</button><button className="gallery-arrow next" onClick={() => select(index + 1)} aria-label="Next photo">›</button></>}<button className="gallery-expand" onClick={onOpen}>⛶ <span>View photos</span> {images.length > 1 && `(${index + 1}/${images.length})`}</button><div className="gallery-thumbnails">{images.map((image, imageIndex) => <button key={image} onClick={() => onChange(imageIndex)} className={imageIndex === index ? 'active' : ''} aria-label={`Show photo ${imageIndex + 1}`}><img src={toAbsolute(image)} alt="" /></button>)}</div></div>
 }
 
-function Pill({ text }){
-  return <span style={{ padding:'6px 10px', border:'1px solid #cbd5e1', background:'#f8fafc', color:'#111827', borderRadius:999, fontSize:12 }}>{text}</span>
+function ImageViewer({ open, images, index, title, onChange, onClose }) {
+  const stageRef = useRef(null)
+  const [scale, setScale] = useState(1)
+  const [position, setPosition] = useState({ x: 0, y: 0 })
+  const [closing, setClosing] = useState(false)
+  const drag = useRef(null)
+  const touch = useRef(null)
+  useEffect(() => { setScale(1); setPosition({ x: 0, y: 0 }); setClosing(false) }, [index, open])
+  const closeWithAnimation = useCallback(() => { if (closing) return; setClosing(true); window.setTimeout(onClose, 170) }, [closing, onClose])
+  useEffect(() => { if (!open) return; const key = event => { if (event.key === 'Escape') closeWithAnimation(); if (event.key === 'ArrowRight') onChange((index + 1) % images.length); if (event.key === 'ArrowLeft') onChange((index - 1 + images.length) % images.length) }; window.addEventListener('keydown', key); document.body.style.overflow = 'hidden'; return () => { window.removeEventListener('keydown', key); document.body.style.overflow = '' } }, [open, index, images.length, onChange, closeWithAnimation])
+  if (!open || !images.length) return null
+  const updateScale = value => { const next = Math.min(5, Math.max(1, value)); setScale(next); if (next === 1) setPosition({ x: 0, y: 0 }) }
+  const navigate = direction => onChange((index + direction + images.length) % images.length)
+  function onWheel(event) { event.preventDefault(); updateScale(scale + (event.deltaY < 0 ? .25 : -.25)) }
+  function pointerDown(event) { if (scale <= 1) return; event.currentTarget.setPointerCapture?.(event.pointerId); drag.current = { x: event.clientX, y: event.clientY, start: position } }
+  function pointerMove(event) { if (!drag.current) return; setPosition({ x: drag.current.start.x + event.clientX - drag.current.x, y: drag.current.start.y + event.clientY - drag.current.y }) }
+  function pointerUp() { drag.current = null }
+  function touchStart(event) { const points = event.touches; if (points.length === 2) { const dx = points[0].clientX - points[1].clientX; const dy = points[0].clientY - points[1].clientY; touch.current = { distance: Math.hypot(dx, dy), scale, x: 0 } } else if (points.length === 1) touch.current = { x: points[0].clientX, scale } }
+  function touchMove(event) { if (!touch.current) return; const points = event.touches; if (points.length === 2) { event.preventDefault(); const dx = points[0].clientX - points[1].clientX; const dy = points[0].clientY - points[1].clientY; updateScale(touch.current.scale * (Math.hypot(dx, dy) / touch.current.distance)) } }
+  function touchEnd(event) { if (touch.current && event.changedTouches.length === 1 && scale === 1) { const distance = event.changedTouches[0].clientX - touch.current.x; if (Math.abs(distance) > 55) navigate(distance < 0 ? 1 : -1) } touch.current = null }
+  async function requestFullScreen() { try { await stageRef.current?.requestFullscreen?.() } catch { /* browser can deny fullscreen; modal remains full viewport */ } }
+  return <div className={`image-viewer${closing ? ' viewer-closing' : ''}`} role="dialog" aria-modal="true" aria-label="Property photo viewer"><div className="viewer-toolbar"><span>{title} · {index + 1} / {images.length}</span><div><button onClick={() => updateScale(scale - .25)} aria-label="Zoom out">−</button><span className="zoom-value">{Math.round(scale * 100)}%</span><button onClick={() => updateScale(scale + .25)} aria-label="Zoom in">+</button><button onClick={requestFullScreen} aria-label="Browser fullscreen">⛶</button><button onClick={closeWithAnimation} aria-label="Close viewer">×</button></div></div><div ref={stageRef} className="viewer-stage" onWheel={onWheel} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp} onTouchStart={touchStart} onTouchMove={touchMove} onTouchEnd={touchEnd}><img draggable="false" src={toAbsolute(images[index])} alt={title || 'Property'} style={{ transform: `translate3d(${position.x}px, ${position.y}px, 0) scale(${scale})` }} />{images.length > 1 && <><button className="viewer-nav left" onClick={() => navigate(-1)}>‹</button><button className="viewer-nav right" onClick={() => navigate(1)}>›</button></>}</div><div className="viewer-thumbnails">{images.map((image, imageIndex) => <button className={imageIndex === index ? 'active' : ''} key={image} onClick={() => onChange(imageIndex)}><img src={toAbsolute(image)} alt={`Photo ${imageIndex + 1}`} /></button>)}</div></div>
 }
 
-function AgentCard({ agent, owner }){
-  const name = agent?.name || owner?.name || '—'
-  const email = agent?.email || owner?.email || ''
-  const phone = agent?.phone || owner?.phone || ''
-  return (
-    <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-      <div style={{ width:48, height:48, borderRadius:'50%', background:'#111827', color:'#fff', display:'grid', placeItems:'center', fontWeight:700 }}>
-        {(name||'—')[0]?.toUpperCase() || '—'}
-      </div>
-      <div>
-        <div style={{ fontWeight:700 }}>{name}</div>
-        <div style={{ color:'#6b7280', fontSize:14 }}>{email}</div>
-        {phone && <div style={{ color:'#6b7280', fontSize:14 }}>{phone}</div>}
-      </div>
-    </div>
-  )
-}
-// details helpers
-function Spec({ label, value }){
-  return (
-    <div style={{ border:'1px solid #e5e7eb', borderRadius:8, padding:'8px 10px', background:'#fff' }}>
-      <div style={{ fontSize:12, color:'#6b7280' }}>{label}</div>
-      <div style={{ fontWeight:700 }}>{value ?? '—'}</div>
-    </div>
-  )
-}
-
-function formatCurrency(amount, currency){
-  try { return new Intl.NumberFormat(undefined, { style:'currency', currency: currency || 'USD' }).format(Number(amount||0)) } catch { return `${amount ?? ''} ${currency ?? ''}` }
-}
-function formatLocation(loc = {}){
-  try{ const parts = [loc.address, loc.city, loc.region, loc.country].filter(Boolean); return parts.length ? parts.join(', ') : '—' } catch { return '—' }
-}
-
-// ---- Helpers (module scope) ----
-function imageCandidates(p){
-  const out = []
-  try{
-    const push = (u)=>{ if(!u) return; if(typeof u==='string'){ const s=u.trim(); if(s && !out.includes(s)) out.push(s) } else if (u.url||u.src){ const s=(u.url||u.src).trim(); if(s && !out.includes(s)) out.push(s) } }
-    if (Array.isArray(p?.images)) p.images.forEach(push)
-    if (Array.isArray(p?.allImages)) p.allImages.forEach(push)
-    const g = p?.galleries || {}
-    ;['living','kitchen','bedrooms','bathrooms','exterior','floorplan'].forEach(k=>{
-      const list = Array.isArray(g[k]) ? g[k] : []
-      list.forEach(push)
-    })
-    ;[p?.coverImage, p?.coverUrl, p?.image, p?.imageUrl, p?.imageURL].forEach(push)
-    // Compatibility lists
-    if (Array.isArray(p?.imageUrls)) p.imageUrls.forEach(push)
-    if (Array.isArray(p?.photos)) p.photos.forEach(push)
-    if (Array.isArray(p?.media)) p.media.forEach(push)
-  }catch{}
-  return out
-}
-
-function toAbsolute(u){ try { return new URL(u, window.location.origin).toString() } catch { return u } }
-
-function renderGalleries(galleries, allImgs = [], setImgIdx){
-  const map = [
-    ['living','Living Room'],
-    ['kitchen','Kitchen'],
-    ['bedrooms','Bedrooms'],
-    ['bathrooms','Bathrooms'],
-    ['exterior','Exterior'],
-    ['floorplan','Floor Plan'],
-  ]
-  const sections = map
-    .map(([key,label])=>{
-      const list = Array.isArray(galleries?.[key]) ? galleries[key].filter(Boolean) : []
-      if (list.length === 0) return null
-      return (
-        <div key={key} style={{ border: '1px solid #eee', borderRadius: 10, padding: 12 }}>
-          <h3 style={{ marginTop: 0 }}>{label}</h3>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
-            {list.map((u, i)=> (
-              <button key={i} onClick={()=>{ const idx = allImgs.findIndex(x=> String(x||'').trim() === String(u||'').trim()); setImgIdx?.(idx >= 0 ? idx : 0) }} title="View image" style={{ padding:0, border:'none', background:'transparent', cursor:'pointer' }}>
-                <img src={u} alt={label} style={{ width:'100%', height:120, objectFit:'cover', borderRadius:8, border:'1px solid #e5e7eb', background:'#fff' }} />
-              </button>
-            ))}
-          </div>
-        </div>
-      )
-    })
-    .filter(Boolean)
-  if (sections.length === 0) return null
-  return (
-    <div style={{ display:'grid', gap:12 }}>
-      <h3 style={{ margin: 0 }}>Photos by Room</h3>
-      {sections}
-    </div>
-  )
-}
+function Fact({ icon, label, value }) { return <div><b>{icon} {value}</b><span>{label}</span></div> }
+function Detail({ label, value }) { return <div><span>{label}</span><strong>{value || '—'}</strong></div> }
+function ContactPerson({ agent, owner, fallbackId }) { const contact = agent || owner; if (!contact) return <p className="muted">Listing contact available on inquiry{fallbackId ? '' : ' once this property is assigned'}.</p>; return <div className="contact-person"><div>{(contact.name || 'C')[0].toUpperCase()}</div><p><strong>{contact.name || 'Listing contact'}</strong><span>{contact.email || contact.phone || 'Property representative'}</span></p></div> }
+function formatCurrency(value, currency) { try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: currency || 'USD', maximumFractionDigits: 0 }).format(Number(value || 0)) } catch { return `${value || '—'} ${currency || ''}` } }
+function formatLocation(location = {}) { return [location.address, location.city, location.region, location.country].filter(Boolean).join(', ') || 'Location available on request' }
+function capitalize(value) { return value ? String(value).charAt(0).toUpperCase() + String(value).slice(1) : '' }
+function statusLabel(status) { return capitalize(status || 'Available') }
+function toAbsolute(url) { try { return new URL(url, window.location.origin).toString() } catch { return url } }
+function imageCandidates(property) { const images = []; const add = value => { const url = typeof value === 'string' ? value : value?.url || value?.src; if (url?.trim() && !images.includes(url.trim())) images.push(url.trim()) }; (property?.images || []).forEach(add); (property?.allImages || []).forEach(add); (property?.imageUrls || []).forEach(add); (property?.photos || []).forEach(add); (property?.media || []).forEach(add); Object.values(property?.galleries || {}).forEach(group => Array.isArray(group) && group.forEach(add)); [property?.coverImage, property?.coverUrl, property?.image, property?.imageUrl].forEach(add); return images }

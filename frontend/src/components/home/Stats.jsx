@@ -7,8 +7,8 @@ export default function Stats() {
     { label: 'Verified Agents', to: 50 },
   ]
   return (
-    <section style={{ padding: '24px 16px', background: '#111827', color: '#fff' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16 }}>
+    <section className="stats-section">
+      <div className="stats-inner">
         {items.map((i) => (
           <KPI key={i.label} to={i.to} label={i.label} />
         ))}
@@ -20,9 +20,8 @@ export default function Stats() {
 function KPI({ to = 0, label = '' }){
   const { ref, value } = useCountUp(to, { duration: 1600, trigger: 'bottom' })
   return (
-    <div ref={ref} style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: 28, fontWeight: 800 }}>{value}+ </div>
-      <div style={{ opacity: 0.9 }}>{label}</div>
+    <div ref={ref} className="stat-item">
+      <div>{value}+ </div><span>{label}</span>
     </div>
   )
 }

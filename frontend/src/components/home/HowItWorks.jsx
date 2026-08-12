@@ -1,21 +1,40 @@
+import './HowItWorks.css'
+
 const steps = [
-  { title: 'Browse properties', desc: 'Find listings that match your needs.', icon: '🔍' },
-  { title: 'Contact agent', desc: 'Ask questions or request a visit.', icon: '💬' },
-  { title: 'Close the deal', desc: 'Make an offer and finalize.', icon: '🏡' },
+  {
+    number: '01',
+    title: 'Discover the right property',
+    desc: 'Explore verified homes and filter by location, budget, and the features that matter to you.',
+  },
+  {
+    number: '02',
+    title: 'Schedule a guided viewing',
+    desc: 'Connect directly with a property professional to ask questions and arrange a convenient visit.',
+  },
+  {
+    number: '03',
+    title: 'Move forward with confidence',
+    desc: 'Submit your offer and receive clear support through every step of your property journey.',
+  },
 ]
 
 export default function HowItWorks() {
   return (
-    <section style={{ padding: '32px 16px' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        <h2 style={{ marginBottom: 16 }}>How It Works</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
-          {steps.map((s) => (
-            <div key={s.title} style={{ border: '1px solid #eee', borderRadius: 10, padding: 16 }}>
-              <div style={{ fontSize: 32 }}>{s.icon}</div>
-              <div style={{ fontWeight: 700 }}>{s.title}</div>
-              <div style={{ color: '#4b5563' }}>{s.desc}</div>
-            </div>
+    <section className="how-it-works">
+      <div className="how-it-works__inner">
+        <div className="how-it-works__heading">
+          <span>Simple by design</span>
+          <h2>Your next home, made straightforward.</h2>
+          <p>From first search to final decision, Relstate makes every stage feel clear and well supported.</p>
+        </div>
+
+        <div className="how-it-works__steps">
+          {steps.map((step) => (
+            <article className="how-it-works__card" key={step.number}>
+              <span className="how-it-works__number">{step.number}</span>
+              <h3>{step.title}</h3>
+              <p>{step.desc}</p>
+            </article>
           ))}
         </div>
       </div>

@@ -1,31 +1,39 @@
 import { Link } from 'react-router-dom'
+import './SiteFooter.css'
 
 export default function SiteFooter() {
   return (
-    <footer style={{ padding: '28px 16px', background: '#f3f4f6' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gap: 16 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 16 }}>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 6 }}>Relstate</div>
-            <div style={{ color: '#6b7280' }}>Your trusted platform to buy, sell, or rent real estate.</div>
+    <footer className="site-footer">
+      <div className="site-footer__inner">
+        <div className="site-footer__main">
+          <div className="site-footer__brand">
+            <Link to="/" className="site-footer__logo" aria-label="Relstate home">
+              <span className="site-footer__logo-mark" aria-hidden="true">R</span>
+              Relstate
+            </Link>
+            <p>Your trusted platform to buy, sell, or rent real estate.</p>
           </div>
-          <div>
-            <div style={{ fontWeight: 700, marginBottom: 6 }}>Links</div>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#111827', display: 'grid', gap: 6 }}>
+
+          <div className="site-footer__section">
+            <h2>Explore</h2>
+            <ul>
               <li><Link to="/about">About Us</Link></li>
               <li><Link to="/contact">Contact</Link></li>
               <li><Link to="/help">Help</Link></li>
               <li><Link to="/privacy">Privacy Policy</Link></li>
             </ul>
           </div>
-          <div>
-            <div style={{ fontWeight: 700, marginBottom: 6 }}>Contact</div>
-            <div style={{ color: '#374151' }}>hello@relstate.example</div>
-            <div style={{ color: '#374151' }}>+251 11 234 5678</div>
+
+          <div className="site-footer__section site-footer__contact">
+            <h2>Get in touch</h2>
+            <a href="mailto:hello@relstate.example">hello@relstate.example</a>
+            <a href="tel:+251112345678">+251 11 234 5678</a>
           </div>
         </div>
-        <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: 12, color: '#6b7280', textAlign: 'center' }}>
-          © {new Date().getFullYear()} Relstate. All rights reserved.
+
+        <div className="site-footer__bottom">
+          <span>© {new Date().getFullYear()} Relstate. All rights reserved.</span>
+          <span>Find your next place with confidence.</span>
         </div>
       </div>
     </footer>

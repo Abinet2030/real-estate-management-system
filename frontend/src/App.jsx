@@ -8,10 +8,6 @@ import NotFound from './pages/NotFound'
 import { Routes, Route, useLocation, Navigate, useParams } from 'react-router-dom'
 import Properties from './pages/Properties'
 import PropertyDetails from './pages/PropertyDetails'
-import Agents from './pages/Agents'
-import AgentMyListings from './pages/AgentMyListings'
-import AgentAddProperty from './pages/AgentAddProperty'
-import AgentProfile from './pages/AgentProfile'
 import About from './pages/About'
 import Help from './pages/Help'
 import Privacy from './pages/Privacy'
@@ -22,7 +18,7 @@ import BuyerMessages from './pages/BuyerMessages'
 
 function App() {
   const location = useLocation()
-  const hideGlobalNav = location.pathname.startsWith('/dashboard/admin') || location.pathname.startsWith('/dashboard/seller') || location.pathname.startsWith('/dashboard/agent')
+  const hideGlobalNav = location.pathname.startsWith('/dashboard/admin') || location.pathname.startsWith('/dashboard/seller')
   return (
     <>
       {!hideGlobalNav && <NavBar />}
@@ -33,25 +29,7 @@ function App() {
             <Route path="/properties" element={<Properties />} />
             <Route path="/properties/:id" element={<PropertyDetails />} />
             <Route path="/property/:id" element={<PropertyIdRedirect />} />
-            <Route path="/agents" element={<Agents />} />
-            <Route path="/agents/:id" element={<AgentProfile />} />
             <Route path="/about" element={<About />} />
-            <Route
-              path="/agent/listings"
-              element={
-                <ProtectedRoute roles={["agent"]}>
-                  <AgentMyListings />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/agent/add"
-              element={
-                <ProtectedRoute roles={["agent"]}>
-                  <AgentAddProperty />
-                </ProtectedRoute>
-              }
-            />
             <Route path="/help" element={<Help />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/contact" element={<Contact />} />
@@ -80,19 +58,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/dashboard/agent"
-              element={
-                <ProtectedRoute roles={["agent"]}>
-                  <SellerDashboard />
-                </ProtectedRoute>
-              }
-             
-            />
-            <Route
-              path="/dashboard/agent/add"
-              element={<Navigate to="/dashboard/agent?tab=add" replace />}
-            />
             <Route path="/login" element={<Login />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
@@ -104,8 +69,6 @@ function App() {
             <Route path="/properties" element={<Properties />} />
             <Route path="/properties/:id" element={<PropertyDetails />} />
             <Route path="/property/:id" element={<PropertyIdRedirect />} />
-            <Route path="/agents" element={<Agents />} />
-            <Route path="/agents/:id" element={<AgentProfile />} />
             <Route path="/about" element={<About />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route
@@ -123,18 +86,6 @@ function App() {
                   <SellerDashboard />
                 </ProtectedRoute>
               }
-            />
-            <Route
-              path="/dashboard/agent"
-              element={
-                <ProtectedRoute roles={["agent"]}>
-                  <SellerDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/dashboard/agent/add"
-              element={<Navigate to="/dashboard/agent?tab=add" replace />}
             />
             <Route path="/login" element={<Login />} />
             <Route path="*" element={<NotFound />} />

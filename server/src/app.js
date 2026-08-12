@@ -4,7 +4,9 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { connectDB } from './lib/db.js';
-import { seedAdminIfNeeded, seedFromFixtures } from './lib/seed.js';
+import { connectPostgres } from './lib/postgres.js';
+import { seedAdminIfNeeded } from './lib/seed.js';
+import { seedPostgresAdminIfNeeded } from './lib/seed-postgres.js';
 import authRouter from './routes/auth.js';
 import usersRouter from './routes/users.js';
 import propertiesRouter from './routes/properties.js';
@@ -26,11 +28,18 @@ app.use(express.json());
 let bootstrapped = false;
 app.use(async (_req, _res, next) => {
   try {
-    await connectDB();
-    if (!bootstrapped) {
-      await seedAdminIfNeeded();
-      await seedFromFixtures();
-      bootstrapped = true;
+    if (process.env.DATABASE_URL) {
+      await connectPostgres();
+      if (!bootstrapped) {
+        await seedPostgresAdminIfNeeded();
+        bootstrapped = true;
+      }
+    } else {
+      await connectDB();
+      if (!bootstrapped) {
+        await seedAdminIfNeeded();
+        bootstrapped = true;
+      }
     }
     next();
   } catch (err) {

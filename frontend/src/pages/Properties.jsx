@@ -4,6 +4,7 @@ import Filters from '../components/common/Filters'
 import PropertyCard from '../components/common/PropertyCard'
 import Pagination from '../components/common/Pagination'
 import api from '../services/api'
+import './properties.css'
 
 export default function Properties() {
   const [items, setItems] = useState([])
@@ -12,56 +13,47 @@ export default function Properties() {
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [searchParams] = useSearchParams()
-  const initialFromQuery = useMemo(() => {
-    // Map query params to filter keys used by Filters and API
-    const type = (searchParams.get('type') || '').toLowerCase()
-    const city = searchParams.get('city') || ''
-    return {
-      type,
-      city,
-    }
-  }, [searchParams])
+  const initialFromQuery = useMemo(() => ({ type: (searchParams.get('type') || '').toLowerCase(), city: searchParams.get('city') || '' }), [searchParams])
   const [filters, setFilters] = useState(initialFromQuery)
 
   useEffect(() => {
     let ignore = false
     async function load() {
-      setLoading(true)
-      setError('')
+      setLoading(true); setError('')
       try {
-        // Placeholder: backend should support pagination params: page, pageSize
         const res = await api.getProperties({ ...filters, page, pageSize: 12 })
         if (!ignore) {
-          // Expecting { data: [], total } but fallback if plain array
           const data = Array.isArray(res) ? res : (res.data || [])
-          setItems(data)
-          setTotal(res.total ?? data.length)
+          setItems(data); setTotal(res.total ?? data.length)
         }
-      } catch (e) {
-        setError(e.message)
-      } finally {
-        setLoading(false)
-      }
+      } catch (e) { if (!ignore) setError(e.message) } finally { if (!ignore) setLoading(false) }
     }
     load()
     return () => { ignore = true }
   }, [filters, page])
 
   return (
-    <section style={{ padding: '16px' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gap: 12 }}>
-        <h2>Explore Properties</h2>
-        <Filters initial={initialFromQuery} onChange={(vals) => { setPage(1); setFilters(vals) }} />
-        {loading && <div>Loading...</div>}
-        {error && <div style={{ color: 'crimson' }}>{error}</div>}
-        {(!loading && items.length === 0) ? (
-          <div style={{ color: '#6b7280' }}>No property found.</div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
-            {items.map((p) => (
-              <PropertyCard key={p.id || p._id} property={p} />
-            ))}
+    <section className="properties-page">
+      <div className="properties-shell">
+        <div className="properties-intro">
+          <div>
+            <p className="properties-eyebrow">Curated homes & spaces</p>
+            <h1>Find a place that feels right.</h1>
+            <p className="properties-lede">Browse thoughtfully listed homes, apartments, land, and commercial spaces in the locations you love.</p>
           </div>
+          <div className="properties-trust"><span className="trust-mark">✓</span><span>Verified listings<br /><strong>updated regularly</strong></span></div>
+        </div>
+        <Filters initial={initialFromQuery} onChange={(vals) => { setPage(1); setFilters(vals) }} />
+        <div className="results-bar">
+          <div><p className="results-kicker">Available properties</p><h2>{loading ? 'Searching listings…' : `${total || items.length} properties to explore`}</h2></div>
+          <span className="results-sort">Showing {items.length} listing{items.length === 1 ? '' : 's'}</span>
+        </div>
+        {loading && <div className="properties-message">Loading the latest listings…</div>}
+        {error && <div className="properties-message properties-error">We could not load listings. {error}</div>}
+        {!loading && items.length === 0 ? (
+          <div className="properties-message properties-empty"><span>⌂</span><h3>No properties found</h3><p>Try clearing a filter or searching a nearby location.</p></div>
+        ) : (
+          <div className="property-grid">{items.map((p) => <PropertyCard key={p.id || p._id} property={p} />)}</div>
         )}
         <Pagination page={page} total={total} pageSize={12} onPageChange={setPage} />
       </div>

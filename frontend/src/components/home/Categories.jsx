@@ -8,17 +8,13 @@ const cats = [
 
 export default function Categories() {
   return (
-    <section style={{ padding: '24px 16px', background: '#f9fafb' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        <h2 style={{ marginBottom: 16 }}>Browse by Category</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+    <section className="home-section category-section">
+      <div className="home-container">
+        <div className="section-heading"><div><p>Explore your options</p><h2>Find the space that suits you</h2></div><a href="/properties">View all properties →</a></div>
+        <div className="category-grid">
           {cats.map((c) => (
-            <a key={c.key} href={`/properties?type=${encodeURIComponent(c.key)}`} style={{
-              border: '1px solid #eee', borderRadius: 10, padding: 16, background: '#fff', textDecoration: 'none', color: '#111827'
-            }}>
-              <div style={{ fontSize: 28 }}>{c.emoji}</div>
-              <div style={{ fontWeight: 600 }}>{c.label}</div>
-              <div style={{ fontSize: 14, color: '#6b7280' }}>Explore {c.label.toLowerCase()}</div>
+            <a key={c.key} className="category-card" href={`/properties?type=${encodeURIComponent(c.key)}`}>
+              <div className="category-icon">{c.emoji}</div><div><strong>{c.label}</strong><span>Explore {c.label.toLowerCase()}</span></div><b>→</b>
             </a>
           ))}
         </div>

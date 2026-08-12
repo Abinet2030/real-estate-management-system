@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import api from '../../services/api'
-import InquiryChatPopup from '../InquiryChatPopup.jsx'
 
 // Demo data used in development when API returns no published properties
 const DEMO_FEATURED = [
@@ -35,7 +34,7 @@ const DEMO_FEATURED = [
     areaSqm: 85,
     location: { city: 'Nairobi', region: 'Nairobi', country: 'Kenya' },
     images: [
-      'https://images.unsplash.com/photo-1502673530728-f79b4cab31b1?q=80&w=1200&auto=format&fit=crop',
+      '/api/uploads/city-view-apartment-01.jpg',
     ],
     status: 'published',
     createdAt: new Date().toISOString(),
@@ -59,11 +58,24 @@ const DEMO_FEATURED = [
   },
 ]
 
+const FEATURED_CACHE_KEY = 'relstate:featured-properties'
+const FEATURED_LIMIT = 40
+
+function readCachedFeatured() {
+  try {
+    const cached = JSON.parse(sessionStorage.getItem(FEATURED_CACHE_KEY) || 'null')
+    return Array.isArray(cached) && cached.length ? cached : null
+  } catch { return null }
+}
+
+function cacheFeatured(items) {
+  try { sessionStorage.setItem(FEATURED_CACHE_KEY, JSON.stringify(items)) } catch { /* storage is optional */ }
+}
+
 export default function FeaturedProperties({ q = '' }) {
-  const [items, setItems] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [items, setItems] = useState(() => readCachedFeatured() || (import.meta.env.DEV ? DEMO_FEATURED : []))
+  const [loading, setLoading] = useState(() => !readCachedFeatured() && !import.meta.env.DEV)
   const [error, setError] = useState('')
-  const [chatOpenFor, setChatOpenFor] = useState(null)
   const location = useLocation()
   const [liveFilter, setLiveFilter] = useState({})
 
@@ -72,14 +84,19 @@ export default function FeaturedProperties({ q = '' }) {
     async function load() {
       try {
         setError('')
-        setLoading(true)
+        if (!readCachedFeatured() && !import.meta.env.DEV) setLoading(true)
         const res = await api.getPublishedProperties()
-        let list = Array.isArray(res) ? res : []
+        const published = Array.isArray(res) ? res : []
+        const selected = published.filter(property => property.featured)
+        let list = (selected.length ? selected : published).slice(0, FEATURED_LIMIT)
         // Fallback to demo items in development when API returns nothing
         if (import.meta.env.DEV && list.length === 0) {
           list = DEMO_FEATURED
         }
-        if (!ignore) setItems(list)
+        if (!ignore && list.length) {
+          setItems(list)
+          cacheFeatured(list)
+        }
       } catch (e) {
         if (!ignore) {
           // In development, if API fails (e.g., backend not ready/proxy error),
@@ -97,7 +114,7 @@ export default function FeaturedProperties({ q = '' }) {
     }
     load()
     return () => { ignore = true }
-  }, [])
+  }, []) // A cached section is shown immediately while this refresh runs once.
 
   // Parse filters from URL and live events
   const urlParams = useMemo(() => new URLSearchParams(location.search), [location.search])
@@ -165,7 +182,7 @@ export default function FeaturedProperties({ q = '' }) {
               return (
                 <article key={p.id} style={{ border: '1px solid #eee', borderRadius: 10, overflow: 'hidden', background: '#fff' }}>
                   {cover ? (
-                    <img src={toAbsolute(cover)} alt={p.title} onError={(e)=>{ e.currentTarget.src = 'data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"600\" height=\"160\"/><\\/svg>' }} style={{ width: '100%', height: 160, objectFit: 'cover', display: 'block' }} />
+                    <img src={toAbsolute(cover)} alt={p.title} loading="lazy" decoding="async" onError={(e) => { e.currentTarget.style.display = 'none' }} style={{ width: '100%', height: 160, objectFit: 'cover', display: 'block' }} />
                   ) : (
                     <div style={{ background: '#e5e7eb', height: 160 }} />
                   )}
@@ -174,23 +191,8 @@ export default function FeaturedProperties({ q = '' }) {
                     <div style={{ color: '#16a34a', fontWeight: 700 }}>{formatPrice(p.price, p.currency)}</div>
                     <div style={{ color: '#6b7280' }}>{formatLocation(p.location)}</div>
                     <div style={{ fontSize: 14, color: '#374151' }}>{formatDesc(p)}</div>
-                    {imgs.length > 1 && (
-                      <div style={{ display: 'flex', gap: 6, marginTop: 8, overflowX: 'auto' }}>
-                        {imgs.slice(1, 6).map((u, i) => (
-                          <img key={i} src={toAbsolute(u)} alt="thumb" onError={(e)=>{ e.currentTarget.style.visibility='hidden' }} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 6, border: '1px solid #eee' }} />
-                        ))}
-                      </div>
-                    )}
-                    <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems:'center' }}>
-                      <Link to={`/properties/${p.id}`} style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: 6 }}>View Details</Link>
-                      <button
-                        aria-label="Chat with owner"
-                        title="Chat with owner"
-                        onClick={()=> setChatOpenFor(p)}
-                        style={{ width:36, height:36, border:'1px solid #111827', background:'#111827', color:'#fff', borderRadius:8, cursor:'pointer', display:'grid', placeItems:'center' }}
-                      >
-                        💬
-                      </button>
+                    <div style={{ marginTop: 12 }}>
+                      <Link to={`/properties/${p.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', border: '1px solid #08785f', borderRadius: 7, background: '#08785f', color: '#fff', fontSize: 13, fontWeight: 800, textDecoration: 'none' }}><span>View property</span><span aria-hidden="true">→</span></Link>
                     </div>
                   </div>
                 </article>
@@ -199,9 +201,6 @@ export default function FeaturedProperties({ q = '' }) {
           )}
         </div>
       </div>
-      {chatOpenFor && (
-        <InquiryChatPopup open={!!chatOpenFor} property={chatOpenFor} onClose={()=>setChatOpenFor(null)} />
-      )}
     </section>
   )
 }

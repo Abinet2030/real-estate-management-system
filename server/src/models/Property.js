@@ -24,6 +24,7 @@ const PropertySchema = new mongoose.Schema(
     areaSqm: { type: Number, default: 0 },
     location: { type: LocationSchema, default: () => ({}) },
     images: { type: [String], default: [] },
+    featured: { type: Boolean, default: false },
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     agentId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     status: { type: String, enum: ['draft', 'pending', 'published'], default: 'pending' },
