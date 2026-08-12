@@ -3,10 +3,10 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { connectDB } from './lib/db.js';
+
 import { connectPostgres } from './lib/postgres.js';
-import { seedAdminIfNeeded } from './lib/seed.js';
 import { seedPostgresAdminIfNeeded } from './lib/seed-postgres.js';
+
 import authRouter from './routes/auth.js';
 import usersRouter from './routes/users.js';
 import propertiesRouter from './routes/properties.js';
@@ -24,47 +24,51 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Ensure DB is connected on first request (cached across invocations)
+// Ensure PostgreSQL is connected on first request
+// Connection is cached across serverless invocations
 let bootstrapped = false;
+
 app.use(async (_req, _res, next) => {
-  try {
-    if (process.env.DATABASE_URL) {
-      await connectPostgres();
-      if (!bootstrapped) {
-        await seedPostgresAdminIfNeeded();
-        bootstrapped = true;
-      }
-    } else {
-      await connectDB();
-      if (!bootstrapped) {
-        await seedAdminIfNeeded();
-        bootstrapped = true;
-      }
+    try {
+        await connectPostgres();
+
+        if (!bootstrapped) {
+            await seedPostgresAdminIfNeeded();
+            bootstrapped = true;
+        }
+
+        next();
+    } catch (err) {
+        next(err);
     }
-    next();
-  } catch (err) {
-    next(err);
-  }
 });
 
-// In serverless we won't use local uploads dir; still keep static for local dev if present
+// In serverless we won't use local uploads directory;
+// keep static uploads for local development if present.
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-app.use('/api/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
-// Health check (under /api)
+app.use(
+    '/api/uploads',
+    express.static(path.join(__dirname, '..', 'uploads'))
+);
+
+// Health check
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', env: process.env.NODE_ENV || 'development' });
+    res.json({
+        status: 'ok',
+        env: process.env.NODE_ENV || 'development'
+    });
 });
 
-// Friendly root handlers
-// Note: On Vercel, requests to "/" are rewritten to "/api/" by `server/api/[...all].js`.
-// Handle both local dev ("/") and serverless ("/api" or "/api/") entry points.
+// Root handler
 app.get('/', (_req, res) => {
-  res.send('API server is running. See /api/health');
+    res.send('API server is running. See /api/health');
 });
+
+// API root
 app.get(['/api', '/api/'], (_req, res) => {
-  res.redirect('/api/health');
+    res.redirect('/api/health');
 });
 
 // Routes
