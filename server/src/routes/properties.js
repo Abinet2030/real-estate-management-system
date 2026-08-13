@@ -1,10 +1,13 @@
 import express from 'express';
-import mongoose from 'mongoose';
-import Property from '../models/Property.js';
 import { requireAdmin } from '../middleware/auth.js';
 import { getPostgresPool } from '../lib/postgres.js';
 
 const router = express.Router();
+
+// MongoDB (Mongoose) removed: require Postgres via `DATABASE_URL` for these routes.
+if (!process.env.DATABASE_URL) {
+  router.use((req, res) => res.status(501).json({ error: 'MongoDB removed; enable DATABASE_URL or implement Postgres' }));
+}
 
 // GET /api/properties - list with optional filters
 router.get('/', async (req, res) => {

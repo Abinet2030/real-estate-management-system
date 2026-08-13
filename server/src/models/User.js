@@ -1,25 +1,11 @@
-import mongoose from 'mongoose';
+// MongoDB models removed. This file provides a safe stub so imports do not crash.
+const stub = {
+  unsupported: true,
+  find: async () => { throw new Error('MongoDB removed; use Postgres (DATABASE_URL) instead'); },
+  findById: async () => null,
+  create: async () => { throw new Error('MongoDB removed; use Postgres (DATABASE_URL) instead'); },
+  findByIdAndUpdate: async () => null,
+  findByIdAndDelete: async () => null,
+};
 
-const UserSchema = new mongoose.Schema(
-  {
-    name: { type: String, required: true, trim: true },
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    passwordHash: { type: String, required: true },
-    role: { type: String, enum: ['admin'], default: 'admin', immutable: true },
-    status: { type: String, enum: ['active', 'pending', 'rejected'], default: 'active' },
-    phone: { type: String },
-    address: { type: String },
-    profileImageUrl: { type: String },
-    // Optional fields for agents/owners
-    bio: { type: String },
-    linkedin: { type: String },
-    telegram: { type: String },
-    // For agents: human-friendly code like AG123456
-    agentCode: { type: String },
-  },
-  { timestamps: true }
-);
-
-UserSchema.index({ email: 1 }, { unique: true });
-
-export default mongoose.model('User', UserSchema);
+export default stub;

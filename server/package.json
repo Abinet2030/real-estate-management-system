@@ -19,9 +19,6 @@
     "dotenv": "^16.6.1",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
-    "mongodb": "^6.20.0",
-    "mongodb-memory-server": "^10.1.4",
-    "mongoose": "^8.6.0",
     "multer": "^2.0.2",
     "pg": "^8.23.0",
     "serverless-http": "^3.2.0"

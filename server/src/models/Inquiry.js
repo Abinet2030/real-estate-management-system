@@ -1,20 +1,11 @@
-import mongoose from 'mongoose';
+// MongoDB models removed. This file provides a safe stub so imports do not crash.
+const stub = {
+  unsupported: true,
+  find: async () => { throw new Error('MongoDB removed; use Postgres (DATABASE_URL) instead'); },
+  findById: async () => null,
+  create: async () => { throw new Error('MongoDB removed; use Postgres (DATABASE_URL) instead'); },
+  findByIdAndUpdate: async () => null,
+  findByIdAndDelete: async () => null,
+};
 
-const InquirySchema = new mongoose.Schema(
-  {
-    propertyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Property', required: true },
-    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    buyerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    buyerName: { type: String, required: true },
-    buyerEmail: { type: String, required: true },
-    status: { type: String, enum: ['open', 'archived'], default: 'open' },
-    lastActivityAt: { type: Date, default: Date.now },
-    buyerUnreadCount: { type: Number, default: 0 },
-    ownerUnreadCount: { type: Number, default: 0 },
-    buyerLastReadAt: { type: Date },
-    ownerLastReadAt: { type: Date },
-  },
-  { timestamps: true }
-);
-
-export default mongoose.model('Inquiry', InquirySchema);
+export default stub;

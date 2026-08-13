@@ -1,17 +1,11 @@
-import mongoose from 'mongoose';
+// MongoDB models removed. This file provides a safe stub so imports do not crash.
+const stub = {
+  unsupported: true,
+  find: async () => { throw new Error('MongoDB removed; use Postgres (DATABASE_URL) instead'); },
+  findById: async () => null,
+  create: async () => { throw new Error('MongoDB removed; use Postgres (DATABASE_URL) instead'); },
+  findByIdAndUpdate: async () => null,
+  findByIdAndDelete: async () => null,
+};
 
-const SupportTicketSchema = new mongoose.Schema(
-  {
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    name: { type: String, required: true },
-    email: { type: String, required: true },
-    senderAddress: { type: String, default: '' },
-    subject: { type: String, default: '' },
-    message: { type: String, required: true },
-    status: { type: String, enum: ['open', 'resolved', 'archived'], default: 'open' },
-    lastActivityAt: { type: Date, default: Date.now },
-  },
-  { timestamps: true }
-);
-
-export default mongoose.model('SupportTicket', SupportTicketSchema);
+export default stub;
