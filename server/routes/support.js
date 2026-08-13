@@ -1,6 +1,6 @@
 import express from 'express';
 import SupportTicket from '../models/SupportTicket.js';
-import { getPostgresPool } from '../lib/postgres.js';
+import { getDatabaseUrl, getPostgresPool } from '../lib/postgres.js';
 import { requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -10,7 +10,7 @@ router.post('/', async (req, res) => {
   try {
     const { name, email, senderAddress = '', subject = '', message = '', userId } = req.body || {};
     if (!name || !email || !message) return res.status(400).json({ error: 'name, email and message are required' });
-    if (process.env.DATABASE_URL) {
+    if (getDatabaseUrl()) {
       const { rows } = await getPostgresPool().query(
         `INSERT INTO support_tickets (user_id, name, email, sender_address, subject, message, last_activity_at)
          VALUES ($1, $2, $3, $4, $5, $6, NOW())
@@ -34,7 +34,7 @@ router.get('/', requireAdmin, async (req, res) => {
     if (status && !['open', 'resolved', 'archived'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status' });
     }
-    if (process.env.DATABASE_URL) {
+    if (getDatabaseUrl()) {
       const values = [];
       const where = status ? 'WHERE status = $1' : '';
       if (status) values.push(status);
@@ -58,7 +58,7 @@ router.get('/', requireAdmin, async (req, res) => {
 // POST /api/support/:id/resolve
 router.post('/:id/resolve', requireAdmin, async (req, res) => {
   try {
-    if (process.env.DATABASE_URL) {
+    if (getDatabaseUrl()) {
       const { rowCount } = await getPostgresPool().query(
         `UPDATE support_tickets
          SET status = 'resolved', last_activity_at = NOW(), updated_at = NOW()

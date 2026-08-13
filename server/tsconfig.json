@@ -25,7 +25,11 @@
     "typeRoots": ["./node_modules/@types"]
   },
   "include": [
-    "src/**/*.js"
+    "*.js",
+    "routes/**/*.js",
+    "middleware/**/*.js",
+    "models/**/*.js",
+    "lib/**/*.js"
   ],
   "exclude": [
     "node_modules"

@@ -1,7 +1,11 @@
 {
   "watch": [
-    "src/**/*.js",
-    "src/**/*.json"
+    "*.js",
+    "routes/**/*.js",
+    "controllers/**/*.js",
+    "middleware/**/*.js",
+    "models/**/*.js",
+    "lib/**/*.js"
   ],
   "ext": "js,json,env",
   "ignore": [
@@ -12,8 +16,6 @@
   "env": {
     "USE_IN_MEMORY_DB": "true",
     "PORT": "4000",
-    "NODE_ENV": "development",
-    "MONGOMS_VERSION": "7.0.14",
-    "MONGOMS_DEBUG": "1"
+    "NODE_ENV": "development"
   }
 }

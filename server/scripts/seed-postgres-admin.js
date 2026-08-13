@@ -2,12 +2,13 @@ import 'dotenv/config';
 import bcrypt from 'bcryptjs';
 import pg from 'pg';
 
-const { DATABASE_URL, ADMIN_NAME, ADMIN_EMAIL, ADMIN_PASSWORD } = process.env;
-if (!DATABASE_URL || !ADMIN_EMAIL || !ADMIN_PASSWORD) {
-  throw new Error('DATABASE_URL, ADMIN_EMAIL, and ADMIN_PASSWORD are required');
+const { ADMIN_NAME, ADMIN_EMAIL, ADMIN_PASSWORD } = process.env;
+const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+if (!connectionString || !ADMIN_EMAIL || !ADMIN_PASSWORD) {
+  throw new Error('DATABASE_URL or POSTGRES_URL, ADMIN_EMAIL, and ADMIN_PASSWORD are required');
 }
 
-const pool = new pg.Pool({ connectionString: DATABASE_URL, ssl: process.env.PGSSL === 'true' ? { rejectUnauthorized: false } : false });
+const pool = new pg.Pool({ connectionString, ssl: process.env.PGSSL === 'true' ? { rejectUnauthorized: false } : false });
 try {
   const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 12);
   await pool.query(

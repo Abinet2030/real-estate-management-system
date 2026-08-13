@@ -2,7 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
-import { getPostgresPool } from '../lib/postgres.js';
+import { getDatabaseUrl, getPostgresPool } from '../lib/postgres.js';
 
 const router = express.Router();
 
@@ -26,7 +26,7 @@ router.post('/login', async (req, res) => {
     email = (email || '').toLowerCase().trim();
     if (!email || !password) return res.status(400).json({ error: 'email and password are required' });
 
-    const user = process.env.DATABASE_URL
+    const user = getDatabaseUrl()
       ? (await getPostgresPool().query(
           `SELECT id, name, email, password_hash, 'admin' AS role, 'active' AS status
            FROM administrators WHERE LOWER(email) = $1`,

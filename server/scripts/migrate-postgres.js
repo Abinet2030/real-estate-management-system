@@ -4,8 +4,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import pg from 'pg';
 
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) throw new Error('DATABASE_URL is required. Example: postgresql://postgres:password@localhost:5432/relstate');
+const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+if (!connectionString) throw new Error('DATABASE_URL or POSTGRES_URL is required.');
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const sql = fs.readFileSync(path.join(__dirname, '..', 'database', 'relstate.sql'), 'utf8');

@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { connectPostgres, getPostgresPool } from './lib/postgres.js';
+import { connectPostgres, getDatabaseUrl, getPostgresPool } from './lib/postgres.js';
 import { seedPostgresAdminIfNeeded } from './lib/seed-postgres.js';
 
 import authRouter from './routes/auth.js';
@@ -28,8 +28,7 @@ app.get('/api/health', (_req, res) => {
     res.json({
         status: 'ok',
         env: process.env.NODE_ENV || 'development',
-        postgres: process.env.DATABASE_URL ? 'configured' : 'not_configured',
-        mongo: 'not_configured'
+        postgres: getDatabaseUrl() ? 'configured' : 'not_configured'
     });
 });
 
@@ -55,7 +54,7 @@ app.use(async (_req, _res, next) => {
     try {
         // Postgres: only ensure pool is created when configured. Avoid awaiting a live
         // connection on every request to prevent serverless cold-start timeouts.
-        if (process.env.DATABASE_URL) {
+        if (getDatabaseUrl()) {
             // instantiate pool synchronously (does not network-connect)
             getPostgresPool();
 
@@ -82,7 +81,7 @@ const __dirname = path.dirname(__filename);
 
 app.use(
     '/api/uploads',
-    express.static(path.join(__dirname, '..', 'uploads'))
+    express.static(path.join(__dirname, 'uploads'))
 );
 
 // (health/root routes are declared earlier to avoid DB bootstrapping on health checks)

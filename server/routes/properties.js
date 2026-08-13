@@ -1,18 +1,18 @@
 import express from 'express';
 import { requireAdmin } from '../middleware/auth.js';
-import { getPostgresPool } from '../lib/postgres.js';
+import { getDatabaseUrl, getPostgresPool } from '../lib/postgres.js';
 
 const router = express.Router();
 
 // MongoDB (Mongoose) removed: require Postgres via `DATABASE_URL` for these routes.
-if (!process.env.DATABASE_URL) {
-  router.use((req, res) => res.status(501).json({ error: 'MongoDB removed; enable DATABASE_URL or implement Postgres' }));
+if (!getDatabaseUrl()) {
+  router.use((_req, res) => res.status(503).json({ error: 'PostgreSQL is not configured' }));
 }
 
 // GET /api/properties - list with optional filters
 router.get('/', async (req, res) => {
   try {
-    if (process.env.DATABASE_URL) {
+    if (getDatabaseUrl()) {
       const values = [];
       const conditions = ["status = 'published'"];
       if (req.query?.type) { values.push(String(req.query.type)); conditions.push(`LOWER(type) = LOWER($${values.length})`); }
@@ -44,7 +44,7 @@ router.get('/', async (req, res) => {
 // GET /api/properties/published - public list for Home page
 router.get('/published', async (_req, res) => {
   try {
-    if (process.env.DATABASE_URL) {
+    if (getDatabaseUrl()) {
       const { rows } = await getPostgresPool().query(
         `SELECT * FROM properties WHERE status = 'published'
          ORDER BY featured DESC, created_at DESC LIMIT 40`,
@@ -72,7 +72,7 @@ router.get('/published', async (_req, res) => {
 // GET /api/properties/manage - complete listing queue for the administrator dashboard.
 router.get('/manage', requireAdmin, async (_req, res) => {
   try {
-    if (process.env.DATABASE_URL) {
+    if (getDatabaseUrl()) {
       const { rows } = await getPostgresPool().query('SELECT * FROM properties ORDER BY created_at DESC');
       return res.json(rows.map(mapPostgresProperty));
     }
@@ -91,7 +91,7 @@ router.post('/', requireAdmin, async (req, res) => {
     for (const k of required) {
       if (!body[k] && body[k] !== 0) return res.status(400).json({ error: `${k} is required` });
     }
-    if (process.env.DATABASE_URL) {
+    if (getDatabaseUrl()) {
       const { rows } = await getPostgresPool().query(
         `INSERT INTO properties
           (title, description, price, currency, type, bedrooms, bathrooms, area_sqm, location, images, featured, status, created_by)
@@ -156,7 +156,7 @@ router.post('/', requireAdmin, async (req, res) => {
 // PATCH /api/properties/:id - admin may edit and publish/unpublish a listing.
 router.patch('/:id', requireAdmin, async (req, res) => {
   try {
-    if (process.env.DATABASE_URL) {
+    if (getDatabaseUrl()) {
       const body = req.body || {};
       const fields = [];
       const values = [];
@@ -199,7 +199,7 @@ router.patch('/:id', requireAdmin, async (req, res) => {
 });
 
 router.delete('/:id', requireAdmin, async (req, res) => {
-  if (process.env.DATABASE_URL) {
+  if (getDatabaseUrl()) {
     try {
       const { rowCount } = await getPostgresPool().query('DELETE FROM properties WHERE id = $1', [req.params.id]);
       if (!rowCount) return res.status(404).json({ error: 'Property not found' });
@@ -239,7 +239,7 @@ router.get('/by-owner', async (req, res) => {
 // GET /api/properties/:id - get single property by id (keep after specific routes)
 router.get('/:id', async (req, res) => {
   try {
-    if (process.env.DATABASE_URL) {
+    if (getDatabaseUrl()) {
       const { rows } = await getPostgresPool().query('SELECT * FROM properties WHERE id = $1 AND status = $2', [req.params.id, 'published']);
       if (!rows[0]) return res.status(404).json({ error: 'Property not found' });
       return res.json(mapPostgresProperty(rows[0]));
