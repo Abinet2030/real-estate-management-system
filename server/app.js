@@ -3,7 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
+import { connectPostgres, getDatabaseUrl, getPostgresPool } from './lib/postgres.js';
 import { connectPostgres, getDatabaseUrl, getPostgresPool } from './lib/postgres.js';
 import { seedPostgresAdminIfNeeded } from './lib/seed-postgres.js';
 
