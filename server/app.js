@@ -3,8 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { connectPostgres, getDatabaseUrl, getPostgresPool } from './lib/postgres.js';
-import { connectPostgres, getDatabaseUrl, getPostgresPool } from './lib/postgres.js';
+
 import { seedPostgresAdminIfNeeded } from './lib/seed-postgres.js';
 
 import authRouter from './routes/auth.js';
@@ -16,7 +15,7 @@ import offersRouter from './routes/offers.js';
 import mediaRouter from './routes/media.js';
 import supportRouter from './routes/support.js';
 import agentsRouter from './routes/agents.js';
-
+import { connectPostgres, getDatabaseUrl, getPostgresPool } from './lib/postgres.js';
 dotenv.config();
 
 const app = express();
