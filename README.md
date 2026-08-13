@@ -88,4 +88,16 @@ relstate-management/
 - Run the scaffold commands above when ready.
 - After backend install, create a sample model/controller and routes for APIs.
 - Wire frontend to call `http://127.0.0.1:8000/api/...` endpoints.
-"# real-estate-management-system" 
+
+## Vercel Deployment Checklist
+- Ensure the root `vercel.json` is present and includes the frontend static build plus `server/api/[...all].js` for the backend.
+- Set Vercel environment variables in the project dashboard:
+  - `DATABASE_URL` = your PostgreSQL connection string
+  - `PGSSL` = `true` if your Postgres server requires SSL (`false` otherwise)
+  - `JWT_SECRET` = a strong token secret for auth
+  - Optional admin user vars: `ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`
+- Confirm `server/package.json` has `serverless-http` and `server/src/app.js` exports the Express app.
+- Use `vercel deploy --prod --yes` from the repository root to deploy both frontend and backend.
+- If using the frontend separately, set `VITE_API_URL` in frontend env vars to the deployed backend API base URL (example: `https://your-backend.vercel.app`).
+- If deploying this monorepo root as a single Vercel project, do not set `VITE_API_URL` and allow the app to use the local `/api` proxy path.
+ 

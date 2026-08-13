@@ -251,10 +251,10 @@ function createDemoApi() {
   }
 }
 
-function buildUrl(path, params) {
-  const isAbsolute = /^https?:\/\//i.test(BASE_URL)
+function buildUrl(path, params, baseUrl = BASE_URL) {
+  const isAbsolute = /^https?:\/\//i.test(baseUrl)
   // If absolute URL provided, use it; otherwise route via current origin (Vite proxy)
-  const base = isAbsolute ? BASE_URL : `${window.location.origin}${BASE_URL}`
+  const base = isAbsolute ? baseUrl : `${window.location.origin}${baseUrl}`
   const url = new URL(base)
   // Preserve base path and append the request path safely
   const cleanedBasePath = url.pathname.replace(/\/$/, '')
@@ -285,6 +285,14 @@ async function request(path, { method = 'GET', params, body, timeoutMs = 8000 } 
         const altUrl = buildUrl(altPath, params)
         // Avoid duplicate if it happens to be identical
         if (!attempts.some(u => u.toString() === altUrl.toString())) attempts.push(altUrl)
+      }
+
+      // If the configured backend host is the same as the web app host,
+      // also try the current origin with a local /api prefix.
+      if (baseForCheck.origin === window.location.origin) {
+        const localApiUrl = new URL(window.location.origin)
+        localApiUrl.pathname = `/api/${String(path || '').replace(/^\//, '')}`
+        if (!attempts.some(u => u.toString() === localApiUrl.toString())) attempts.push(localApiUrl)
       }
     }
   } catch {

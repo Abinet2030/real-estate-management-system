@@ -1,5 +1,0 @@
-## Render deployment configuration disabled
-# This file was intentionally neutralized to separate local frontend/backend
-# development from cloud-specific deployment settings. If you plan to deploy to
-# Render again, restore the previous configuration or create a new one.
-

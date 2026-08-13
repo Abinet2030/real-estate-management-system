@@ -1,5 +1,4 @@
+import serverless from 'serverless-http';
+import app from '../src/app.js';
 
-export default function disabledHandler(_req, res) {
-  res.statusCode = 501;
-  res.end('Serverless handler disabled. Run the Express server with node src/index.js');
-}
+export default serverless(app);

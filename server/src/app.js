@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { connectPostgres } from './lib/postgres.js';
+import { connectPostgres, getPostgresPool } from './lib/postgres.js';
 import { seedPostgresAdminIfNeeded } from './lib/seed-postgres.js';
 
 import authRouter from './routes/auth.js';
@@ -20,21 +20,53 @@ import agentsRouter from './routes/agents.js';
 dotenv.config();
 
 const app = express();
-
 app.use(cors());
 app.use(express.json());
 
-// Ensure PostgreSQL is connected on first request
-// Connection is cached across serverless invocations
+// Health check (placed before any DB initialization) — must return quickly in serverless.
+app.get('/api/health', (_req, res) => {
+    res.json({
+        status: 'ok',
+        env: process.env.NODE_ENV || 'development',
+        postgres: process.env.DATABASE_URL ? 'configured' : 'not_configured',
+        mongo: 'not_configured'
+    });
+});
+
+// Respond quickly to favicon requests to avoid hitting serverless timeouts.
+app.get('/favicon.ico', (_req, res) => res.status(204).end());
+
+// Root handler (fast)
+app.get('/', (_req, res) => {
+    res.send('API server is running. See /api/health');
+});
+
+// API root redirect
+app.get(['/api', '/api/'], (_req, res) => {
+    res.redirect('/api/health');
+});
+
+// Ensure PostgreSQL is connected on first request when a database is configured.
+// Some deployments (like Vercel previews or temporary/public health checks) do not
+// have DATABASE_URL set, and the app should still respond on /api/health.
 let bootstrapped = false;
 
 app.use(async (_req, _res, next) => {
     try {
-        await connectPostgres();
+        // Postgres: only ensure pool is created when configured. Avoid awaiting a live
+        // connection on every request to prevent serverless cold-start timeouts.
+        if (process.env.DATABASE_URL) {
+            // instantiate pool synchronously (does not network-connect)
+            getPostgresPool();
 
-        if (!bootstrapped) {
-            await seedPostgresAdminIfNeeded();
-            bootstrapped = true;
+            // Only perform seeding when explicitly requested via env var to avoid
+            // blocking startup in serverless environments.
+            if (!bootstrapped && process.env.SEED_ON_BOOT === 'true') {
+                // connect and seed; this may fail fast due to pool timeouts
+                await connectPostgres();
+                await seedPostgresAdminIfNeeded();
+                bootstrapped = true;
+            }
         }
 
         next();
@@ -53,23 +85,7 @@ app.use(
     express.static(path.join(__dirname, '..', 'uploads'))
 );
 
-// Health check
-app.get('/api/health', (_req, res) => {
-    res.json({
-        status: 'ok',
-        env: process.env.NODE_ENV || 'development'
-    });
-});
-
-// Root handler
-app.get('/', (_req, res) => {
-    res.send('API server is running. See /api/health');
-});
-
-// API root
-app.get(['/api', '/api/'], (_req, res) => {
-    res.redirect('/api/health');
-});
+// (health/root routes are declared earlier to avoid DB bootstrapping on health checks)
 
 // Routes
 app.use('/api/auth', authRouter);
