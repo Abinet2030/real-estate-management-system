@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+app.use('/api/properties', propertiesRouter);
+import propertiesRouter from './routes/properties.js';
 
 dotenv.config();
 
