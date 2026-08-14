@@ -325,7 +325,13 @@ async function request(path, { method = 'GET', params, body, timeoutMs = 8000 } 
               const listErrors = Array.isArray(data?.errors)
                 ? data.errors.map(e => (typeof e === 'string' ? e : e?.message || JSON.stringify(e))).join(', ')
                 : ''
-              msg = data?.message || data?.error || listErrors || msg
+              // Prefer a string message, but if the API returns an object in `error`,
+              // stringify it so the UI doesn't show the raw "[object Object]" text.
+              let candidate = data?.message || listErrors || ''
+              if (!candidate && data?.error) {
+                candidate = typeof data.error === 'string' ? data.error : JSON.stringify(data.error)
+              }
+              msg = candidate || msg
             } else {
               const text = await res.text()
               if (text) msg = text

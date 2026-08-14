@@ -169,7 +169,7 @@ export default function FeaturedProperties({ q = '' }) {
     <section style={{ padding: '32px 16px' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         <h2 style={{ marginBottom: 16 }}>Featured Properties</h2>
-        {error && <div style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca', padding: '10px 12px', borderRadius: 8, marginBottom: 12 }}>{error}</div>}
+        {error && <div style={{ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca', padding: '10px 12px', borderRadius: 8, marginBottom: 12 }}>{formatError(error)}</div>}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
           {loading ? (
             <div>Loading...</div>
@@ -207,6 +207,18 @@ export default function FeaturedProperties({ q = '' }) {
 
 function formatPrice(amount, currency) {
   try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: currency || 'USD' }).format(amount || 0) } catch { return `${amount} ${currency || ''}` }
+}
+function formatError(err) {
+  if (!err) return ''
+  if (typeof err === 'object') {
+    try { return JSON.stringify(err) } catch { return String(err) }
+  }
+  const s = String(err || '')
+  // If server returned an HTML error page, avoid rendering raw HTML in the UI.
+  if (s.trim().startsWith('<')) return 'Server error (HTML response). Check API logs.'
+  // Truncate very long messages for UI friendliness
+  if (s.length > 100) return s.slice(0, 100) + '...'
+  return s
 }
 function formatLocation(loc = {}) {
   const parts = [loc.city, loc.region, loc.country].filter(Boolean)
