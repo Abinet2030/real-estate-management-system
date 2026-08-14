@@ -96,4 +96,22 @@ app.use('/api/media', mediaRouter);
 app.use('/api/agents', agentsRouter);
 app.use('/api/support', supportRouter);
 
+// Generic error handler to ensure JSON responses from the API
+// This prevents serverless runtimes from returning opaque HTML/text errors
+// and makes debugging in production easier.
+app.use((err, _req, res, _next) => {
+    console.error('Unhandled error in API:', err && err.stack ? err.stack : err);
+    const isProd = (process.env.NODE_ENV || 'development').toLowerCase() === 'production';
+    const status = err && err.status ? err.status : 500;
+    const payload = isProd
+        ? { error: { code: String(status), message: 'A server error has occurred' } }
+        : { error: { message: err?.message || String(err), stack: err?.stack } };
+    try {
+        res.status(status).json(payload);
+    } catch (e) {
+        // In case response streaming fails, at least log the error
+        console.error('Failed to send error response:', e);
+    }
+});
+
 export default app;
