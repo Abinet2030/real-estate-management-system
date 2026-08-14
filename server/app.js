@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-app.use('/api/properties', propertiesRouter);
 import propertiesRouter from './routes/properties.js';
 
 dotenv.config();
@@ -12,10 +11,12 @@ app.use(cors());
 app.use(express.json());
 
 app.get('/api/health', (_req, res) => {
-    res.json({
-        status: "ok",
-        message: "API is running"
-    });
+  res.json({
+    status: 'ok',
+    message: 'API is running',
+  });
 });
+
+app.use('/api/properties', propertiesRouter);
 
 export default app;
