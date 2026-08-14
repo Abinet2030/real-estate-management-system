@@ -1,6 +1,10 @@
 import app from './app.js';
 import pool from "./database/db.js";
+import app from "../app.js";
 
+export default function handler(req, res) {
+  return app(req, res);
+}
 const PORT = process.env.PORT || 4000;
 
 app.get("/api/health", async (req, res) => {
