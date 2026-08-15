@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import propertiesRouter from './routes/properties.js';
+import authRouter from './routes/auth.js';
 
 dotenv.config();
 
@@ -18,5 +19,6 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.use('/api/properties', propertiesRouter);
+app.use('/api/auth', authRouter);
 
 export default app;
