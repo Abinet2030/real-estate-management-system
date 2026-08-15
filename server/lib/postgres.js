@@ -1,11 +1,10 @@
-import 'dotenv/config';
-import pg from 'pg';
+import "dotenv/config";
+import pg from "pg";
 
 const { Pool } = pg;
+
 let pool;
 
-// Marketplace Postgres integrations commonly expose POSTGRES_URL.  Supporting
-// DATABASE_URL too keeps local development and other Postgres providers simple.
 export function getDatabaseUrl() {
   return process.env.DATABASE_URL || process.env.POSTGRES_URL;
 }
@@ -13,17 +12,22 @@ export function getDatabaseUrl() {
 export function getPostgresPool() {
   if (!pool) {
     const connectionString = getDatabaseUrl();
-    if (!connectionString) throw new Error('DATABASE_URL or POSTGRES_URL is required');
-    const connTimeout = process.env.PG_CONNECTION_TIMEOUT_MS ? parseInt(process.env.PG_CONNECTION_TIMEOUT_MS, 10) : 2000;
+
+    if (!connectionString) {
+      throw new Error("DATABASE_URL or POSTGRES_URL is required");
+    }
+
     pool = new Pool({
       connectionString,
-      ssl: process.env.PGSSL === 'true' ? { rejectUnauthorized: false } : false,
-      // Fail fast when the Postgres server is unreachable to avoid Vercel function timeouts
-      connectionTimeoutMillis: connTimeout,
-      // Keep clients healthy but not too long in idle
+      ssl: {
+        rejectUnauthorized: false,
+      },
+      connectionTimeoutMillis: 5000,
       idleTimeoutMillis: 30000,
+      max: 10,
     });
   }
+
   return pool;
 }
 
