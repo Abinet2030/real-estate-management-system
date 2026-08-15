@@ -16,6 +16,6 @@
     "db:seed-admin": "npm run db:seed-admin --workspace server"
   },
   "engines": {
-    "node": "22.x"
+    "node": "24.x"
   }
 }
