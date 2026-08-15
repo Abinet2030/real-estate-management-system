@@ -42,4 +42,16 @@ app.get('/uploads/:name', (req, res) => {
   });
 });
 
+// Also serve via /api/uploads/:name for URLs returned by the API
+app.get('/api/uploads/:name', (req, res) => {
+  const name = String(req.params.name || '');
+  const filePath = path.join(uploadsDir, name);
+  return res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error('Error sending upload file (api)', err);
+      res.status(err.status || 404).send('Not found');
+    }
+  });
+});
+
 export default app;
