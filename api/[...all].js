@@ -1,10 +1,8 @@
-import app from '../server/app.js';
+import app from '../app.js';
 
 export default function handler(req, res) {
-  return app(req, res);
-}
-import app from '../server/app.js';
-
-export default function handler(req, res) {
+  if (typeof req.url === 'string' && req.url.startsWith('/api')) {
+    req.url = req.url.replace(/^\/api/, '') || '/';
+  }
   return app(req, res);
 }

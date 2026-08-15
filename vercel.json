@@ -1,23 +1,18 @@
 {
-	"version": 2,
-	"builds": [
-		{
-			"src": "frontend/package.json",
-			"use": "@vercel/static-build",
-			"config": { "distDir": "dist" }
-		},
-		{
-			"src": "server/api/**/*.js",
-			"use": "@vercel/node"
-		},
-		{
-			"src": "api/**/*.js",
-			"use": "@vercel/node"
-		}
-	],
-	"routes": [
- 		{ "src": "/api/(.*)", "dest": "/api/$1" },
-		{ "src": "/uploads/(.*)", "dest": "/server/uploads/$1" },
-		{ "src": "/(.*)", "dest": "/frontend/$1" }
-	]
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist" }
+    }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/(.*)", "dest": "/frontend/$1" }
+  ]
 }
