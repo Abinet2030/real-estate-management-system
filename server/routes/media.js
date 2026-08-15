@@ -22,7 +22,7 @@ router.get('/', async (_req, res) => {
         if (!stat.isFile()) return null;
         return {
           filename: name,
-          url: `/uploads/${name}`,
+          url: `/api/uploads/${name}`,
           size: stat.size,
           modifiedAt: stat.mtime,
         };
