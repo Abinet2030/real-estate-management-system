@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
 import propertiesRouter from './routes/properties.js';
 import authRouter from './routes/auth.js';
 import uploadsRouter from './routes/uploads.js';
