@@ -26,7 +26,14 @@ export default function Properties() {
           const data = Array.isArray(res) ? res : (res.data || [])
           setItems(data); setTotal(res.total ?? data.length)
         }
-      } catch (e) { if (!ignore) setError(e.message) } finally { if (!ignore) setLoading(false) }
+      } catch (e) {
+        if (!ignore) {
+          const message = e?.status === 404
+            ? 'The listings service is unavailable right now. Please try again shortly.'
+            : (e?.message || 'The listings service is temporarily unavailable.')
+          setError(message)
+        }
+      } finally { if (!ignore) setLoading(false) }
     }
     load()
     return () => { ignore = true }
@@ -49,7 +56,7 @@ export default function Properties() {
           <span className="results-sort">Showing {items.length} listing{items.length === 1 ? '' : 's'}</span>
         </div>
         {loading && <div className="properties-message">Loading the latest listings…</div>}
-        {error && <div className="properties-message properties-error">We could not load listings. {error}</div>}
+        {error && <div className="properties-message properties-error">We couldn’t load listings right now. {error}</div>}
         {!loading && items.length === 0 ? (
           <div className="properties-message properties-empty"><span>⌂</span><h3>No properties found</h3><p>Try clearing a filter or searching a nearby location.</p></div>
         ) : (
