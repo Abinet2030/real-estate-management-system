@@ -403,7 +403,24 @@ const liveApi = {
       throw err
     }
   }),
-  getManagedProperties: () => request('/properties/manage'),
+  getManagedProperties: () => request('/properties/manage').catch(async (err) => {
+    // Fallback for static deployments: load properties from data.json and apply any local overrides
+    try {
+      const res = await fetch('/data.json')
+      if (!res.ok) throw err
+      const data = await res.json()
+      let items = Array.isArray(data.properties) ? data.properties.slice() : []
+      // Apply local overrides (e.g., featured flags) stored in localStorage
+      try {
+        const raw = localStorage.getItem('relstate:overrides:v1') || '{}'
+        const overrides = JSON.parse(raw)
+        items = items.map(p => ({ ...p, featured: overrides[p.id] !== undefined ? !!overrides[p.id] : !!p.featured }))
+      } catch (e) { /* ignore parse errors */ }
+      return items
+    } catch (e) {
+      throw err
+    }
+  }),
   // The development homepage can render fallback sample cards while the API is offline.
   // Resolve those non-Mongo IDs locally so their “More” links remain usable.
   getProperty: (id) => getDemoProperty(id) || request(`/properties/${id}`).catch(async (err) => {
@@ -456,7 +473,19 @@ const liveApi = {
   setUserInactive: (id) => request(`/users/${id}/reject`, { method: 'POST' }),
   // Properties
   createProperty: (body) => request('/properties', { method: 'POST', body }),
-  setPropertyFeatured: (id, featured) => request(`/properties/${id}`, { method: 'PATCH', body: { featured } }),
+  setPropertyFeatured: (id, featured) => request(`/properties/${id}`, { method: 'PATCH', body: { featured } }).catch(async (err) => {
+    // Fallback: persist featured flag in localStorage overrides so admin UX works on static site
+    try {
+      const key = 'relstate:overrides:v1'
+      const raw = localStorage.getItem(key) || '{}'
+      const obj = JSON.parse(raw)
+      obj[id] = !!featured
+      localStorage.setItem(key, JSON.stringify(obj))
+      return { ok: true }
+    } catch (e) {
+      throw err
+    }
+  }),
   updateProperty: (id, body) => request(`/properties/${id}`, { method: 'PATCH', body }),
   deleteProperty: (id) => request(`/properties/${id}`, { method: 'DELETE' }),
   getPublishedProperties: () => {
