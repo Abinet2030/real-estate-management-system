@@ -179,10 +179,12 @@ export default function FeaturedProperties({ q = '' }) {
             filtered.map((p) => {
               const imgs = Array.isArray(p.images) ? p.images : []
               const cover = imgs[0]
+              const coverSrc = cover ? (typeof cover === 'string' ? cover : (cover.url || cover.src || '')) : ''
+              const coverAlt = cover ? (typeof cover === 'string' ? p.title : (cover.alt || p.title)) : p.title
               return (
                 <article key={p.id} style={{ border: '1px solid #eee', borderRadius: 10, overflow: 'hidden', background: '#fff' }}>
-                  {cover ? (
-                    <img src={toAbsolute(cover)} alt={p.title} loading="lazy" decoding="async" onError={(e) => { e.currentTarget.style.display = 'none' }} style={{ width: '100%', height: 160, objectFit: 'cover', display: 'block' }} />
+                  {coverSrc ? (
+                    <img src={toAbsolute(coverSrc)} alt={coverAlt} loading="lazy" decoding="async" onError={(e) => { e.currentTarget.style.display = 'none' }} style={{ width: '100%', height: 160, objectFit: 'cover', display: 'block' }} />
                   ) : (
                     <div style={{ background: '#e5e7eb', height: 160 }} />
                   )}
