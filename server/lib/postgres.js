@@ -1,5 +1,6 @@
 import "dotenv/config";
 import pg from "pg";
+import createJsonDb from './jsonDb.js';
 
 const { Pool } = pg;
 
@@ -9,7 +10,15 @@ export function getDatabaseUrl() {
   return process.env.DATABASE_URL || process.env.POSTGRES_URL;
 }
 
+export function useJsonDb() {
+  return String(process.env.USE_JSON_DB || '').toLowerCase() === 'true';
+}
+
 export function getPostgresPool() {
+  if (useJsonDb()) {
+    return createJsonDb();
+  }
+
   if (!pool) {
     const connectionString = getDatabaseUrl();
 
@@ -32,6 +41,9 @@ export function getPostgresPool() {
 }
 
 export async function connectPostgres() {
+  if (useJsonDb()) {
+    return getPostgresPool();
+  }
   const client = await getPostgresPool().connect();
   client.release();
   return getPostgresPool();

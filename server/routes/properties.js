@@ -1,11 +1,11 @@
 import express from 'express';
 import { requireAdmin } from '../middleware/auth.js';
-import { getDatabaseUrl, getPostgresPool } from '../lib/postgres.js';
+import { getDatabaseUrl, getPostgresPool, useJsonDb } from '../lib/postgres.js';
 
 const router = express.Router();
 
-// Require Postgres for all property routes
-if (!getDatabaseUrl()) {
+// If Postgres is not configured and JSON mode isn't enabled, block routes
+if (!getDatabaseUrl() && !useJsonDb()) {
   router.use((_req, res) => res.status(503).json({ error: 'PostgreSQL is not configured' }));
 }
 

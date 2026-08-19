@@ -1,11 +1,12 @@
-// MongoDB models removed. This file provides a safe stub so imports do not crash.
-const stub = {
-  unsupported: true,
-  find: async () => { throw new Error('MongoDB removed; use Postgres (DATABASE_URL) instead'); },
-  findById: async () => null,
-  create: async () => { throw new Error('MongoDB removed; use Postgres (DATABASE_URL) instead'); },
-  findByIdAndUpdate: async () => null,
-  findByIdAndDelete: async () => null,
+import json from '../lib/jsonModels.js';
+
+const Offer = {
+  find: async (filter = {}) => {
+    return await json.find('offers', filter);
+  },
+  findById: async (id) => json.findById('offers', id),
+  create: async (data) => json.create('offers', data),
+  save: async (obj) => json.updateById('offers', obj._id || obj.id, obj),
 };
 
-export default stub;
+export default Offer;
