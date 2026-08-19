@@ -379,7 +379,30 @@ async function uploadImages(files) {
 }
 
 const liveApi = {
-  getProperties: (params) => request('/properties', { params }),
+  getProperties: (params) => request('/properties', { params }).catch(async (err) => {
+    // Fallback to static data.json when no backend is available (deployed static site)
+    try {
+      const res = await fetch('/data.json')
+      if (!res.ok) throw err
+      const data = await res.json()
+      let items = Array.isArray(data.properties) ? data.properties.slice() : []
+      if (params) {
+        if (params.ownerId) items = items.filter(p => String(p.ownerId || p.created_by) === String(params.ownerId))
+        if (params.agentId) items = items.filter(p => String(p.agentId) === String(params.agentId))
+        if (params.type) items = items.filter(p => String(p.type || '').toLowerCase() === String(params.type).toLowerCase())
+        if (params.city) items = items.filter(p => String((p.location && p.location.city) || '').toLowerCase().includes(String(params.city).toLowerCase()))
+        const min = params.minPrice != null && params.minPrice !== '' ? Number(params.minPrice) : null
+        const max = params.maxPrice != null && params.maxPrice !== '' ? Number(params.maxPrice) : null
+        if (min != null) items = items.filter(p => Number(p.price || 0) >= min)
+        if (max != null) items = items.filter(p => Number(p.price || 0) <= max)
+        if (params.bedrooms) items = items.filter(p => Number(p.bedrooms || 0) >= Number(params.bedrooms))
+        if (params.bathrooms) items = items.filter(p => Number(p.bathrooms || 0) >= Number(params.bathrooms))
+      }
+      return items
+    } catch (e) {
+      throw err
+    }
+  }),
   getManagedProperties: () => request('/properties/manage'),
   // The development homepage can render fallback sample cards while the API is offline.
   // Resolve those non-Mongo IDs locally so their “More” links remain usable.
