@@ -11,7 +11,11 @@
       "bathrooms": 1,
       "area_sqm": 70,
       "location": { "city": "Springfield", "address": "123 Main St" },
-      "images": ["https://images.unsplash.com/photo-1560185008-b033106af2f1?auto=format&w=1600&q=80"],
+      "images": [
+        { "url": "https://images.unsplash.com/photo-1560185008-b033106af2f1?auto=format&w=1600&q=80", "alt": "Living room with modern finishes" },
+        { "url": "https://images.unsplash.com/photo-1598928506310-6c8a66f0b4d4?auto=format&w=1600&q=80", "alt": "Apartment kitchen and dining area" },
+        { "url": "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&w=1600&q=80", "alt": "Bedroom with natural light" }
+      ],
       "featured": true,
       "created_by": "user-admin-1",
       "status": "published",
@@ -29,7 +33,11 @@
       "bathrooms": 2,
       "area_sqm": 180,
       "location": { "city": "Rivertown", "address": "45 River Rd" },
-      "images": ["https://images.unsplash.com/photo-1505691723518-36a0f7da7444?auto=format&w=1600&q=80"],
+      "images": [
+        { "url": "https://images.unsplash.com/photo-1505691723518-36a0f7da7444?auto=format&w=1600&q=80", "alt": "Family house exterior with garden" },
+        { "url": "https://images.unsplash.com/photo-1502673530728-f79b4cab31b1?auto=format&w=1600&q=80", "alt": "Cozy living space with fireplace" },
+        { "url": "https://images.unsplash.com/photo-1572120360610-d971b9b0f1a0?auto=format&w=1600&q=80", "alt": "Spacious backyard and patio" }
+      ],
       "featured": false,
       "created_by": "user-admin-1",
       "status": "published",
@@ -47,7 +55,11 @@
       "bathrooms": 4,
       "area_sqm": 420,
       "location": { "city": "Seaview", "address": "12 Ocean Drive" },
-      "images": ["https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&w=1600&q=80"],
+      "images": [
+        { "url": "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&w=1600&q=80", "alt": "Villa exterior with pool" },
+        { "url": "https://images.unsplash.com/photo-1505692794403-1f1dfd1a6b20?auto=format&w=1600&q=80", "alt": "Poolside lounge area" },
+        { "url": "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&w=1600&q=80", "alt": "Spacious modern interior" }
+      ],
       "featured": true,
       "created_by": "user-admin-1",
       "status": "published",
@@ -65,7 +77,11 @@
       "bathrooms": 2,
       "area_sqm": 120,
       "location": { "city": "Meadowville", "address": "7 Country Lane" },
-      "images": ["https://images.unsplash.com/photo-1502673530728-f79b4cab31b1?auto=format&w=1600&q=80"],
+      "images": [
+        { "url": "https://images.unsplash.com/photo-1502673530728-f79b4cab31b1?auto=format&w=1600&q=80", "alt": "Cottage exterior in countryside" },
+        { "url": "https://images.unsplash.com/photo-1505691723518-36a0f7da7444?auto=format&w=1600&q=80", "alt": "Cozy interior with wooden beams" },
+        { "url": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&w=1600&q=80", "alt": "Garden and outdoor seating" }
+      ],
       "featured": false,
       "created_by": "user-admin-1",
       "status": "published",
@@ -83,7 +99,11 @@
       "bathrooms": 1,
       "area_sqm": 65,
       "location": { "city": "Metro City", "address": "200 Central Ave" },
-      "images": ["https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&w=1600&q=80"],
+      "images": [
+        { "url": "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&w=1600&q=80", "alt": "Loft interior with open plan" },
+        { "url": "https://images.unsplash.com/photo-1523217582562-09d0def993a6?auto=format&w=1600&q=80", "alt": "Loft bedroom with city view" },
+        { "url": "https://images.unsplash.com/photo-1560185008-b033106af2f1?auto=format&w=1600&q=80", "alt": "Modern kitchen and dining" }
+      ],
       "featured": true,
       "created_by": "user-admin-1",
       "status": "published",
@@ -101,7 +121,11 @@
       "bathrooms": 3,
       "area_sqm": 200,
       "location": { "city": "Oakwood", "address": "89 Oak St" },
-      "images": ["https://images.unsplash.com/photo-1598928506310-6c8a66f0b4d4?auto=format&w=1600&q=80"],
+      "images": [
+        { "url": "https://images.unsplash.com/photo-1598928506310-6c8a66f0b4d4?auto=format&w=1600&q=80", "alt": "Suburban home exterior with driveway" },
+        { "url": "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&w=1600&q=80", "alt": "Family living room" },
+        { "url": "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&w=1600&q=80", "alt": "Backyard and patio area" }
+      ],
       "featured": false,
       "created_by": "user-admin-1",
       "status": "published",
@@ -119,7 +143,11 @@
       "bathrooms": 2,
       "area_sqm": 95,
       "location": { "city": "Coastline", "address": "5 Beachfront Way" },
-      "images": ["https://images.unsplash.com/photo-1505692794403-1f1dfd1a6b20?auto=format&w=1600&q=80"],
+      "images": [
+        { "url": "https://images.unsplash.com/photo-1505692794403-1f1dfd1a6b20?auto=format&w=1600&q=80", "alt": "Condo balcony with ocean view" },
+        { "url": "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&w=1600&q=80", "alt": "Beachside living area" },
+        { "url": "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&w=1600&q=80", "alt": "Bedroom with sea light" }
+      ],
       "featured": true,
       "created_by": "user-admin-1",
       "status": "published",
@@ -137,7 +165,11 @@
       "bathrooms": 1,
       "area_sqm": 80,
       "location": { "city": "Highridge", "address": "31 Summit Trail" },
-      "images": ["https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&w=1600&q=80"],
+      "images": [
+        { "url": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&w=1600&q=80", "alt": "Mountain cabin exterior" },
+        { "url": "https://images.unsplash.com/photo-1502673530728-f79b4cab31b1?auto=format&w=1600&q=80", "alt": "Cozy cabin interior" },
+        { "url": "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&w=1600&q=80", "alt": "Panoramic mountain view" }
+      ],
       "featured": false,
       "created_by": "user-admin-1",
       "status": "published",
@@ -155,7 +187,11 @@
       "bathrooms": 3,
       "area_sqm": 260,
       "location": { "city": "Uptown", "address": "1 Skyline Blvd" },
-      "images": ["https://images.unsplash.com/photo-1523217582562-09d0def993a6?auto=format&w=1600&q=80"],
+      "images": [
+        { "url": "https://images.unsplash.com/photo-1523217582562-09d0def993a6?auto=format&w=1600&q=80", "alt": "Penthouse living area with skyline view" },
+        { "url": "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&w=1600&q=80", "alt": "Modern kitchen and dining" },
+        { "url": "https://images.unsplash.com/photo-1505692794403-1f1dfd1a6b20?auto=format&w=1600&q=80", "alt": "Evening city skyline from balcony" }
+      ],
       "featured": true,
       "created_by": "user-admin-1",
       "status": "published",
@@ -173,7 +209,11 @@
       "bathrooms": 1,
       "area_sqm": 30,
       "location": { "city": "CityCenter", "address": "10 Market St" },
-      "images": ["https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&w=1600&q=80"],
+      "images": [
+        { "url": "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&w=1600&q=80", "alt": "Compact studio interior with natural light" },
+        { "url": "https://images.unsplash.com/photo-1560185008-b033106af2f1?auto=format&w=1600&q=80", "alt": "Studio kitchenette" },
+        { "url": "https://images.unsplash.com/photo-1523217582562-09d0def993a6?auto=format&w=1600&q=80", "alt": "Nearby city street view" }
+      ],
       "featured": false,
       "created_by": "user-admin-1",
       "status": "published",
@@ -191,7 +231,11 @@
       "bathrooms": 2,
       "area_sqm": 150,
       "location": { "city": "Riverside", "address": "22 Dockside" },
-      "images": ["https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&w=1600&q=80"],
+      "images": [
+        { "url": "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&w=1600&q=80", "alt": "Riverside townhouse exterior" },
+        { "url": "https://images.unsplash.com/photo-1505691723518-36a0f7da7444?auto=format&w=1600&q=80", "alt": "Riverside deck and dock" },
+        { "url": "https://images.unsplash.com/photo-1502673530728-f79b4cab31b1?auto=format&w=1600&q=80", "alt": "Townhouse living room" }
+      ],
       "featured": false,
       "created_by": "user-admin-1",
       "status": "published",
@@ -209,7 +253,11 @@
       "bathrooms": 5,
       "area_sqm": 1200,
       "location": { "city": "Greendale", "address": "1 Estate Road" },
-      "images": ["https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&w=1600&q=80"],
+      "images": [
+        { "url": "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&w=1600&q=80", "alt": "Estate aerial exterior with grounds" },
+        { "url": "https://images.unsplash.com/photo-1505692794403-1f1dfd1a6b20?auto=format&w=1600&q=80", "alt": "Formal dining room" },
+        { "url": "https://images.unsplash.com/photo-1523217582562-09d0def993a6?auto=format&w=1600&q=80", "alt": "Expansive grounds and landscaping" }
+      ],
       "featured": true,
       "created_by": "user-admin-1",
       "status": "published",
