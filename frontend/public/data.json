@@ -1,0 +1,56 @@
+{
+  "properties": [
+    {
+      "id": "prop-1",
+      "title": "Cozy 2BR Apartment in Downtown",
+      "description": "Bright, centrally-located apartment near shops and transit.",
+      "price": 95000,
+      "currency": "USD",
+      "type": "apartment",
+      "bedrooms": 2,
+      "bathrooms": 1,
+      "area_sqm": 70,
+      "location": { "city": "Springfield", "address": "123 Main St" },
+      "images": ["/uploads/sample1.jpg"],
+      "featured": true,
+      "created_by": "user-admin-1",
+      "status": "published",
+      "created_at": "2026-08-01T12:00:00.000Z",
+      "updated_at": "2026-08-01T12:00:00.000Z"
+    },
+    {
+      "id": "prop-2",
+      "title": "Spacious Family House with Garden",
+      "description": "Four-bedroom house with a large garden and garage.",
+      "price": 220000,
+      "currency": "USD",
+      "type": "house",
+      "bedrooms": 4,
+      "bathrooms": 2,
+      "area_sqm": 180,
+      "location": { "city": "Rivertown", "address": "45 River Rd" },
+      "images": ["/uploads/sample2.jpg"],
+      "featured": false,
+      "created_by": "user-admin-1",
+      "status": "published",
+      "created_at": "2026-07-15T09:30:00.000Z",
+      "updated_at": "2026-07-15T09:30:00.000Z"
+    }
+  ],
+  "users": [
+    {
+      "_id": "user-admin-1",
+      "name": "Admin User",
+      "email": "admin@example.com",
+      "role": "admin",
+      "status": "active",
+      "phone": "",
+      "address": "",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "inquiries": [],
+  "inquiryMessages": [],
+  "offers": []
+}

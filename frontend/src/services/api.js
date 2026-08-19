@@ -383,7 +383,17 @@ const liveApi = {
   getManagedProperties: () => request('/properties/manage'),
   // The development homepage can render fallback sample cards while the API is offline.
   // Resolve those non-Mongo IDs locally so their “More” links remain usable.
-  getProperty: (id) => getDemoProperty(id) || request(`/properties/${id}`),
+  getProperty: (id) => getDemoProperty(id) || request(`/properties/${id}`).catch(async (err) => {
+    try {
+      const res = await fetch('/data.json')
+      if (!res.ok) throw err
+      const data = await res.json()
+      if (Array.isArray(data.properties)) return data.properties.find(p => String(p.id) === String(id)) || null
+    } catch (e) {
+      throw err
+    }
+    throw err
+  }),
   getUsers: (params) => request('/users', { params }),
   getAgents: (params) => request('/agents', { params }),
   getAgent: (id) => request(`/agents/${id}`),
@@ -406,7 +416,18 @@ const liveApi = {
   deleteProperty: (id) => request(`/properties/${id}`, { method: 'DELETE' }),
   getPublishedProperties: () => {
     if (USE_DEMO) return Promise.resolve(DEMO_PROPERTIES)
-    return request('/properties/published', { timeoutMs: 2500 })
+    return request('/properties/published', { timeoutMs: 2500 }).catch(async (err) => {
+      // Fallback for static deployments without a backend: load frontend/public/data.json
+      try {
+        const res = await fetch('/data.json')
+        if (!res.ok) throw err
+        const data = await res.json()
+        if (Array.isArray(data.properties)) return data.properties.filter(p => p.status === 'published')
+      } catch (e) {
+        throw err
+      }
+      throw err
+    })
   },
   getPropertiesByOwner: (ownerId) => request('/properties/by-owner', { params: { ownerId } }),
   // Inquiries
