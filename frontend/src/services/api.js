@@ -457,17 +457,37 @@ const liveApi = {
   }),
   // The development homepage can render fallback sample cards while the API is offline.
   // Resolve those non-Mongo IDs locally so their “More” links remain usable.
-  getProperty: (id) => getDemoProperty(id) || request(`/properties/${id}`).catch(async (err) => {
+  getProperty: async (id) => {
+    const demo = getDemoProperty(id)
+    if (demo) return demo
     try {
-      const res = await fetch('/data.json')
-      if (!res.ok) throw err
-      const data = await res.json()
-      if (Array.isArray(data.properties)) return data.properties.find(p => String(p.id) === String(id)) || null
-    } catch (e) {
+      const property = await request(`/properties/${id}`)
+      // If backend returns a property but it lacks videos, try to merge from public/data.json (static demo)
+      try {
+        if (property && (!Array.isArray(property.videos) || property.videos.length === 0)) {
+          const res = await fetch('/data.json')
+          if (res.ok) {
+            const data = await res.json()
+            const found = Array.isArray(data.properties) ? data.properties.find(p => String(p.id) === String(id)) : null
+            if (found && Array.isArray(found.videos) && found.videos.length) {
+              return { ...property, videos: found.videos }
+            }
+          }
+        }
+      } catch (e) { /* ignore static merge errors */ }
+      return property
+    } catch (err) {
+      try {
+        const res = await fetch('/data.json')
+        if (!res.ok) throw err
+        const data = await res.json()
+        if (Array.isArray(data.properties)) return data.properties.find(p => String(p.id) === String(id)) || null
+      } catch (e) {
+        throw err
+      }
       throw err
     }
-    throw err
-  }),
+  },
   getUsers: (params) => request('/users', { params }),
   getAgents: (params) => request('/agents', { params }),
   getAgent: (id) => request(`/agents/${id}`),
