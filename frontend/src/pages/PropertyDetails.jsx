@@ -53,8 +53,22 @@ export default function PropertyDetails() {
 
   const images = imageCandidates(item)
   const current = Math.min(activeImage, Math.max(images.length - 1, 0))
+  const canModify = !!(user && (user.role === 'admin' || String(user.id || user._id) === String(item.ownerId || item.created_by || item.createdBy)))
   const amenities = Array.isArray(item.features) ? item.features : (Array.isArray(item.amenities) ? item.amenities : [])
   const contactTitle = 'Send inquiry to admin'
+
+  async function removeImage(imageUrl) {
+    if (!canModify) return window.alert('You are not authorized to remove images from this property.')
+    if (!window.confirm('Remove this image from the property?')) return
+    try {
+      const remaining = images.filter(u => toAbsolute(u) !== toAbsolute(imageUrl))
+      await api.updateProperty(item.id || item._id || normalizedId, { images: remaining })
+      setItem(prev => ({ ...prev, images: remaining }))
+      setActiveImage(i => Math.min(i, Math.max(remaining.length - 1, 0)))
+    } catch (err) {
+      window.alert(err.message || 'Unable to remove image')
+    }
+  }
 
   async function sendInquiry(event) {
     event.preventDefault()
@@ -85,14 +99,20 @@ export default function PropertyDetails() {
         </div>
 
         <section className="property-hero-grid">
-          <ImmersiveGallery images={images} title={item.title} index={current} onChange={setActiveImage} onOpen={() => setViewerOpen(true)} />
+          <ImmersiveGallery
+            images={images}
+            title={item.title}
+            index={current}
+            onChange={setActiveImage}
+            onOpen={() => setViewerOpen(true)}
+            canModify={canModify}
+            onRemoveImage={removeImage}
+          />
           {Array.isArray(item.videos) && item.videos.length > 0 && (
             <aside className="property-videos">
               <h3>Virtual tour</h3>
-  const canModify = !!(user && (user.role === 'admin' || String(user.id || user._id) === String(item.ownerId || item.created_by || item.createdBy)))
               <VideoGallery videos={item.videos} title={item.title} />
             </aside>
-    if (!canModify) return window.alert('You are not authorized to remove images from this property.')
           )}
           <aside className="property-summary">
             <p className="eyebrow">{String(item.type || 'Property').toUpperCase()} · {statusLabel(item.status)}</p>
@@ -122,10 +142,39 @@ export default function PropertyDetails() {
   )
 }
 
-function ImmersiveGallery({ images, title, index, onChange, onOpen }) {
+function ImmersiveGallery({ images, title, index, onChange, onOpen, canModify, onRemoveImage }) {
   if (!images.length) return <div className="gallery-empty">No property photos available</div>
   const select = next => onChange((next + images.length) % images.length)
-  return <div className="immersive-gallery"><div style={{ position: 'relative' }}><button className="gallery-main" onClick={onOpen} aria-label="Open full-screen photo viewer"><img src={toAbsolute(images[index])} alt={title || 'Property'} /><span className="gallery-overlay"><b>Immersive photo tour</b><small>Open image viewer</small></span></button>{canModify && <button className="image-remove-button" onClick={(e) => { e.stopPropagation(); removeImage(images[index]) }} aria-label="Remove image">×</button>}</div>{images.length > 1 && <><button className="gallery-arrow previous" onClick={() => select(index - 1)} aria-label="Previous photo">‹</button><button className="gallery-arrow next" onClick={() => select(index + 1)} aria-label="Next photo">›</button></>}<button className="gallery-expand" onClick={onOpen}>⛶ <span>View photos</span> {images.length > 1 && `(${index + 1}/${images.length})`}</button><div className="gallery-thumbnails">{images.map((image, imageIndex) => <div key={image} style={{ position: 'relative' }}><button onClick={() => onChange(imageIndex)} className={imageIndex === index ? 'active' : ''} aria-label={`Show photo ${imageIndex + 1}`}><img src={toAbsolute(image)} alt="" /></button>{canModify && <button className="image-remove-thumb" onClick={(e) => { e.stopPropagation(); removeImage(image) }} aria-label={`Remove photo ${imageIndex + 1}`}>×</button>}</div>)}</div></div>
+  return (
+    <div className="immersive-gallery">
+      <div style={{ position: 'relative' }}>
+        <button className="gallery-main" onClick={onOpen} aria-label="Open full-screen photo viewer">
+          <img src={toAbsolute(images[index])} alt={title || 'Property'} />
+          <span className="gallery-overlay"><b>Immersive photo tour</b><small>Open image viewer</small></span>
+        </button>
+        {canModify && (
+          <button className="image-remove-button" onClick={(e) => { e.stopPropagation(); onRemoveImage(images[index]) }} aria-label="Remove image">×</button>
+        )}
+      </div>
+      {images.length > 1 && <>
+        <button className="gallery-arrow previous" onClick={() => select(index - 1)} aria-label="Previous photo">‹</button>
+        <button className="gallery-arrow next" onClick={() => select(index + 1)} aria-label="Next photo">›</button>
+      </>}
+      <button className="gallery-expand" onClick={onOpen}>⛶ <span>View photos</span> {images.length > 1 && `(${index + 1}/${images.length})`}</button>
+      <div className="gallery-thumbnails">
+        {images.map((image, imageIndex) => (
+          <div key={image} style={{ position: 'relative' }}>
+            <button onClick={() => onChange(imageIndex)} className={imageIndex === index ? 'active' : ''} aria-label={`Show photo ${imageIndex + 1}`}>
+              <img src={toAbsolute(image)} alt="" />
+            </button>
+            {canModify && (
+              <button className="image-remove-thumb" onClick={(e) => { e.stopPropagation(); onRemoveImage(image) }} aria-label={`Remove photo ${imageIndex + 1}`}>×</button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 function ImageViewer({ open, images, index, title, onChange, onClose }) {
