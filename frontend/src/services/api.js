@@ -416,6 +416,12 @@ const liveApi = {
         const overrides = JSON.parse(raw)
         items = items.map(p => ({ ...p, featured: overrides[p.id] !== undefined ? !!overrides[p.id] : !!p.featured }))
       } catch (e) { /* ignore parse errors */ }
+      // Apply property-level overrides (saved when updateProperty cannot reach a backend)
+      try {
+        const propRaw = localStorage.getItem('relstate:property-overrides:v1') || '{}'
+        const propOverrides = JSON.parse(propRaw)
+        items = items.map(p => ({ ...p, ...(propOverrides[p.id] || {}) }))
+      } catch (e) { /* ignore parse errors */ }
       return items
     } catch (e) {
       throw err
@@ -486,7 +492,20 @@ const liveApi = {
       throw err
     }
   }),
-  updateProperty: (id, body) => request(`/properties/${id}`, { method: 'PATCH', body }),
+  updateProperty: (id, body) => request(`/properties/${id}`, { method: 'PATCH', body }).catch(async (err) => {
+    // Fallback for static deployments: persist property changes in localStorage so the UI can update
+    try {
+      const key = 'relstate:property-overrides:v1'
+      const raw = localStorage.getItem(key) || '{}'
+      const obj = JSON.parse(raw)
+      obj[id] = { ...(obj[id] || {}), ...(body || {}) }
+      localStorage.setItem(key, JSON.stringify(obj))
+      // Return a minimal updated shape compatible with expectations
+      return { property: { id, ...(obj[id] || {}) } }
+    } catch (e) {
+      throw err
+    }
+  }),
   deleteProperty: (id) => request(`/properties/${id}`, { method: 'DELETE' }),
   getPublishedProperties: () => {
     if (USE_DEMO) return Promise.resolve(DEMO_PROPERTIES)
