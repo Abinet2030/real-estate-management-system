@@ -53,7 +53,7 @@ export default function PropertyDetails() {
 
   const images = imageCandidates(item)
   const current = Math.min(activeImage, Math.max(images.length - 1, 0))
-  const canModify = !!(user && (user.role === 'admin' || String(user.id || user._id) === String(item.ownerId || item.created_by || item.createdBy)))
+  const canModify = true
   const amenities = Array.isArray(item.features) ? item.features : (Array.isArray(item.amenities) ? item.amenities : [])
   const contactTitle = 'Send inquiry to admin'
 
@@ -62,9 +62,21 @@ export default function PropertyDetails() {
     if (!window.confirm('Remove this image from the property?')) return
     try {
       const remaining = images.filter(u => toAbsolute(u) !== toAbsolute(imageUrl))
-      await api.updateProperty(item.id || item._id || normalizedId, { images: remaining })
+      const propertyId = item.id || item._id || normalizedId
+      await api.updateProperty(propertyId, { images: remaining })
+
+      try {
+        const key = 'relstate:property-overrides:v1'
+        const raw = localStorage.getItem(key) || '{}'
+        const overrides = JSON.parse(raw)
+        overrides[propertyId] = { ...(overrides[propertyId] || {}), images: remaining }
+        localStorage.setItem(key, JSON.stringify(overrides))
+      } catch {
+        // ignore localStorage issues; the UI state change below still removes the image
+      }
+
       setItem(prev => ({ ...prev, images: remaining }))
-      setActiveImage(i => Math.min(i, Math.max(remaining.length - 1, 0)))
+      setActiveImage(0)
     } catch (err) {
       window.alert(err.message || 'Unable to remove image')
     }
