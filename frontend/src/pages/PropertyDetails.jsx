@@ -153,12 +153,28 @@ function VideoGallery({ videos = [], title = '' }) {
   const [index, setIndex] = useState(0)
   if (!Array.isArray(videos) || !videos.length) return null
   const src = videos[index]
+  const getYouTubeId = (u) => {
+    if (!u) return null
+    try {
+      const url = new URL(u, window.location.origin)
+      if (url.hostname.includes('youtu.be')) return url.pathname.replace(/^\//, '')
+      if (url.hostname.includes('youtube.com')) return url.searchParams.get('v')
+    } catch { return null }
+    return null
+  }
+  const ytId = getYouTubeId(src)
   return (
     <div className="video-gallery">
       <div className="video-stage">
-        <video controls style={{ width: '100%', maxHeight: '360px' }} src={toAbsolute(src)} aria-label={`Virtual tour for ${title}`}>
-          Sorry, your browser doesn't support embedded videos.
-        </video>
+        {ytId ? (
+          <div style={{ position: 'relative', paddingTop: '56.25%' }}>
+            <iframe title={`Virtual tour for ${title}`} src={`https://www.youtube.com/embed/${ytId}`} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+          </div>
+        ) : (
+          <video controls style={{ width: '100%', maxHeight: '360px' }} src={toAbsolute(src)} aria-label={`Virtual tour for ${title}`}>
+            Sorry, your browser doesn't support embedded videos.
+          </video>
+        )}
       </div>
       {videos.length > 1 && <div className="video-thumbs">{videos.map((v, i) => <button key={v} onClick={() => setIndex(i)} className={i === index ? 'active' : ''} aria-label={`Play video ${i + 1}`}><span>▶</span><small>{`Video ${i + 1}`}</small></button>)}</div>}
     </div>
