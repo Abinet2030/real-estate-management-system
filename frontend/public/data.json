@@ -34,7 +34,7 @@
       "area_sqm": 180,
       "location": { "city": "Rivertown", "address": "45 River Rd" },
       "images": [
-        { "url": "https://images.unsplash.com/photo-1502673530728-f79b4cab31b1?auto=format&w=1600&q=80", "alt": "Cozy living space with fireplace" },
+        { "url": "https://images.unsplash.com/photo-1560185008-b033106af2f1?auto=format&w=1600&q=80", "alt": "Cozy living space with fireplace" },
         { "url": "https://images.unsplash.com/photo-1560185008-b033106af2f1?auto=format&w=1600&q=80", "alt": "Modern kitchen and dining" },
         { "url": "https://images.unsplash.com/photo-1572120360610-d971b9b0f1a0?auto=format&w=1600&q=80", "alt": "Spacious backyard and patio" }
       ],
@@ -78,7 +78,7 @@
       "area_sqm": 120,
       "location": { "city": "Meadowville", "address": "7 Country Lane" },
       "images": [
-        { "url": "https://images.unsplash.com/photo-1502673530728-f79b4cab31b1?auto=format&w=1600&q=80", "alt": "Cottage exterior in countryside" },
+        { "url": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&w=1600&q=80", "alt": "Cottage exterior in countryside" },
         { "url": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&w=1600&q=80", "alt": "Cozy interior with wooden beams" },
         { "url": "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&w=1600&q=80", "alt": "Garden and outdoor seating" }
       ],
@@ -167,7 +167,7 @@
       "location": { "city": "Highridge", "address": "31 Summit Trail" },
       "images": [
         { "url": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&w=1600&q=80", "alt": "Mountain cabin exterior" },
-        { "url": "https://images.unsplash.com/photo-1502673530728-f79b4cab31b1?auto=format&w=1600&q=80", "alt": "Cozy cabin interior" },
+        { "url": "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&w=1600&q=80", "alt": "Cozy cabin interior" },
         { "url": "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&w=1600&q=80", "alt": "Panoramic mountain view" }
       ],
       "featured": false,
@@ -234,7 +234,7 @@
       "images": [
         { "url": "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&w=1600&q=80", "alt": "Riverside townhouse exterior" },
         { "url": "https://images.unsplash.com/photo-1523217582562-09d0def993a6?auto=format&w=1600&q=80", "alt": "Riverside deck and dock" },
-        { "url": "https://images.unsplash.com/photo-1502673530728-f79b4cab31b1?auto=format&w=1600&q=80", "alt": "Townhouse living room" }
+        { "url": "https://images.unsplash.com/photo-1523217582562-09d0def993a6?auto=format&w=1600&q=80", "alt": "Townhouse living room" }
       ],
       "featured": false,
       "created_by": "user-admin-1",
