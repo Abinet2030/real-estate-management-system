@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS properties (
   area_sqm NUMERIC(12,2) NOT NULL DEFAULT 0 CHECK (area_sqm >= 0),
   location JSONB NOT NULL DEFAULT '{}'::jsonb,
   images JSONB NOT NULL DEFAULT '[]'::jsonb,
+  videos JSONB NOT NULL DEFAULT '[]'::jsonb,
   featured BOOLEAN NOT NULL DEFAULT FALSE,
   status VARCHAR(12) NOT NULL DEFAULT 'draft' CHECK (status IN ('draft','pending','published')),
   created_by UUID NOT NULL REFERENCES administrators(id),
@@ -36,6 +37,7 @@ CREATE TABLE IF NOT EXISTS properties (
 CREATE INDEX IF NOT EXISTS properties_status_created_idx ON properties (status, created_at DESC);
 CREATE INDEX IF NOT EXISTS properties_location_idx ON properties USING GIN (location);
 ALTER TABLE properties ADD COLUMN IF NOT EXISTS featured BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS videos JSONB NOT NULL DEFAULT '[]'::jsonb;
 CREATE INDEX IF NOT EXISTS properties_featured_idx ON properties (featured, created_at DESC);
 
 -- Messages submitted from the public Contact page. These are surfaced in the

@@ -62,8 +62,8 @@ router.post('/', requireAdmin, async (req, res) => {
     }
     const { rows } = await getPostgresPool().query(
       `INSERT INTO properties
-          (title, description, price, currency, type, bedrooms, bathrooms, area_sqm, location, images, featured, status, created_by)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::jsonb, $11, $12, $13)
+          (title, description, price, currency, type, bedrooms, bathrooms, area_sqm, location, images, videos, featured, status, created_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::jsonb, $11::jsonb, $12, $13, $14)
          RETURNING *`,
       [
         body.title,
@@ -76,6 +76,7 @@ router.post('/', requireAdmin, async (req, res) => {
         Number(body.areaSqm || 0),
         JSON.stringify(body.location || {}),
         JSON.stringify(Array.isArray(body.images) ? body.images : []),
+        JSON.stringify(Array.isArray(body.videos) ? body.videos : []),
         body.featured === true,
         body.publish === true ? 'published' : 'draft',
         req.user.sub,
@@ -104,6 +105,7 @@ router.patch('/:id', requireAdmin, async (req, res) => {
     const values = [];
     if (typeof body.featured === 'boolean') { values.push(body.featured); fields.push(`featured = $${values.length}`); }
     if (Array.isArray(body.images)) { values.push(JSON.stringify(body.images)); fields.push(`images = $${values.length}::jsonb`); }
+    if (Array.isArray(body.videos)) { values.push(JSON.stringify(body.videos)); fields.push(`videos = $${values.length}::jsonb`); }
     const editable = [
       ['title', 'title'], ['description', 'description'], ['price', 'price'], ['currency', 'currency'],
       ['type', 'type'], ['bedrooms', 'bedrooms'], ['bathrooms', 'bathrooms'], ['areaSqm', 'area_sqm'],
@@ -182,6 +184,7 @@ function mapPostgresProperty(p) {
     areaSqm: Number(p.area_sqm),
     location: p.location || {},
     images: Array.isArray(p.images) ? p.images : [],
+    videos: Array.isArray(p.videos) ? p.videos : [],
     featured: Boolean(p.featured),
     ownerId: p.created_by,
     status: p.status,

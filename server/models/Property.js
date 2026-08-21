@@ -14,6 +14,7 @@ function mapRowToProperty(p) {
     areaSqm: Number(p.area_sqm),
     location: p.location || {},
     images: Array.isArray(p.images) ? p.images : [],
+    videos: Array.isArray(p.videos) ? p.videos : [],
     featured: Boolean(p.featured),
     ownerId: p.created_by,
     status: p.status,
@@ -47,11 +48,11 @@ const Property = {
 
   create: async (data = {}, createdBy) => {
     const client = getPostgresPool();
-    const { rows } = await client.query(
+     const { rows } = await client.query(
       `INSERT INTO properties
-         (title, description, price, currency, type, bedrooms, bathrooms, area_sqm, location, images, featured, status, created_by)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::jsonb, $11, $12, $13)
-         RETURNING *`,
+        (title, description, price, currency, type, bedrooms, bathrooms, area_sqm, location, images, videos, featured, status, created_by)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::jsonb, $11::jsonb, $12, $13, $14)
+        RETURNING *`,
       [
         data.title,
         data.description || '',
@@ -63,6 +64,7 @@ const Property = {
         Number(data.areaSqm || 0),
         JSON.stringify(data.location || {}),
         JSON.stringify(Array.isArray(data.images) ? data.images : []),
+        JSON.stringify(Array.isArray(data.videos) ? data.videos : []),
         data.featured === true,
         data.status || (data.publish === true ? 'published' : 'draft'),
         createdBy || null,
@@ -88,6 +90,7 @@ const Property = {
     }
     if (update.location !== undefined) { fields.push(`location = ${setNumber(JSON.stringify(update.location || {}))}::jsonb`); }
     if (Array.isArray(update.images)) { fields.push(`images = ${setNumber(JSON.stringify(update.images))}::jsonb`); }
+    if (Array.isArray(update.videos)) { fields.push(`videos = ${setNumber(JSON.stringify(update.videos))}::jsonb`); }
 
     if (!fields.length) return null;
     values.push(id);

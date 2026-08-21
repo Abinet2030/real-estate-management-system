@@ -21,6 +21,7 @@ const DEMO_PROPERTIES = [
       'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&w=2400&q=90',
       'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&w=2400&q=90',
     ],
+    videos: [],
     status: 'published',
     createdAt: new Date().toISOString(),
   },
@@ -41,6 +42,7 @@ const DEMO_PROPERTIES = [
       '/api/uploads/city-view-apartment-03.jpg',
       '/api/uploads/city-view-apartment-04.jpg',
     ],
+    videos: [],
     status: 'published',
     createdAt: new Date().toISOString(),
   },
@@ -62,6 +64,7 @@ const DEMO_PROPERTIES = [
       'https://images.unsplash.com/photo-1615873968403-89e068629265?auto=format&w=2400&q=90',
       'https://images.unsplash.com/photo-1615529162924-f8605388461d?auto=format&w=2400&q=90',
     ],
+    videos: [],
     status: 'published',
     createdAt: new Date().toISOString(),
   },
@@ -248,6 +251,14 @@ function createDemoApi() {
       setState(s => ({ ...s, media: [...items, ...s.media] }))
       return ok(items)
     },
+    uploadVideos: async (files) => {
+      const items = (files || []).map((_f, idx) => ({
+        url: `https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4`,
+        id: genId('vid'),
+      }))
+      setState(s => ({ ...s, media: [...items, ...s.media] }))
+      return ok(items)
+    },
   }
 }
 
@@ -363,6 +374,23 @@ async function request(path, { method = 'GET', params, body, timeoutMs = 8000 } 
 }
 async function uploadImages(files) {
   const url = buildUrl('/uploads/images')
+  const token = localStorage.getItem('auth:token') || ''
+  const fd = new FormData()
+  ;(files || []).forEach(f => fd.append('files', f))
+  const res = await fetch(url.toString(), {
+    method: 'POST',
+    body: fd,
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      // Note: no Content-Type; browser sets multipart boundary
+    },
+  })
+  if (!res.ok) throw new Error(`API POST failed: ${res.status}`)
+  return res.json()
+}
+
+async function uploadVideos(files) {
+  const url = buildUrl('/uploads/videos')
   const token = localStorage.getItem('auth:token') || ''
   const fd = new FormData()
   ;(files || []).forEach(f => fd.append('files', f))
@@ -547,6 +575,7 @@ const liveApi = {
   getMedia: (ownerId) => request('/media', { params: ownerId ? { ownerId } : undefined }),
   // Uploads
   uploadImages,
+  uploadVideos,
 }
 
 // Prefer demo API when explicitly requested via env flag

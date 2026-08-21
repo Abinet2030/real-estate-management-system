@@ -191,7 +191,18 @@ export default function AdminDashboard() {
             {active === 'overview' && (
               <>
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-                  <h2 style={{ margin: 0 }}>Admin Dashboard</h2>
+          <textarea name="images" value={images.join('\n')} onChange={event => setImages(event.target.value.split(/\r?\n|,/).map(url => url.trim()).filter(Boolean))} style={{ ...editInput, minHeight: 90, marginTop: 5 }} /></label>
+          {uploadError && <p style={{ margin: '6px 0 0', color: '#b91c1c', fontSize: 13 }}>{uploadError}</p>}
+          <div style={{ marginTop: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 7 }}>
+              <span style={{ color: '#475569', fontSize: 13 }}>Virtual tour videos</span>
+              <label style={{ ...btnSecondary, cursor: uploading ? 'wait' : 'pointer' }}>{uploading ? 'Uploading…' : 'Upload videos'}
+                <input type="file" accept="video/*" multiple disabled={uploading} style={{ display: 'none' }} onChange={event => { const files = Array.from(event.target.files || []); if (files.length) { setUploading(true); setUploadError(''); api.uploadVideos(files).then(result => { const urls = result?.urls || []; setVideos(prev => [...new Set([...(prev||[]), ...urls])]); }).catch(e => setUploadError(e.message || 'Unable to upload videos.')).finally(() => setUploading(false)); } event.target.value = '' }} />
+              </label>
+            </div>
+            <label style={{ color: '#475569', fontSize: 13 }}>Video URLs: one URL per line
+              <textarea name="videos" defaultValue={(property.videos||[]).join('\n')} style={{ ...editInput, minHeight: 90, marginTop: 5 }} /></label>
+          </div>
                   <span style={{ color: '#6b7280', fontSize: 12 }}>Overview • Updated {ovUpdatedAt || '—'}</span>
                 </div>
 
@@ -506,6 +517,7 @@ function FeaturedPropertyManager() {
         bathrooms: Number(form.get('bathrooms') || 0), areaSqm: Number(form.get('areaSqm') || 0),
         location: { city: form.get('city'), region: form.get('region'), country: form.get('country') },
         images: String(form.get('images') || '').split(/\r?\n|,/).map(item => item.trim()).filter(Boolean),
+        videos: String(form.get('videos') || '').split(/\r?\n|,/).map(item => item.trim()).filter(Boolean),
       }
       const status = form.get('status')
       if (typeof status === 'string' && status) changes.status = status
@@ -526,6 +538,7 @@ function FeaturedPropertyManager() {
 function PropertyEditForm({ property, onSave, onCancel }) {
   const location = property.location || {}
   const [images, setImages] = useState(() => propertyImageUrls(property))
+  const [videos, setVideos] = useState(() => (Array.isArray(property.videos) ? property.videos : []))
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
   async function addImages(files) {

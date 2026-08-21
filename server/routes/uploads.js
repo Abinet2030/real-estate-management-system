@@ -41,4 +41,28 @@ router.post('/images', upload.array('files', 10), async (req, res) => {
   }
 });
 
+// Allow video uploads separately
+const uploadVideos = multer({
+  storage,
+  fileFilter: (_req, file, cb) => {
+    if (!String(file.mimetype || '').startsWith('video/')) return cb(new Error('Only video uploads are allowed'));
+    cb(null, true);
+  },
+  limits: { fileSize: 100 * 1024 * 1024, files: 5 },
+});
+
+router.post('/videos', uploadVideos.array('files', 5), async (req, res) => {
+  try {
+    const files = req.files || [];
+    if (!files.length) return res.status(400).json({ error: 'No files uploaded' });
+
+    const base = `${req.protocol}://${req.get('host')}`;
+    const urls = files.map((f) => `${base}/api/uploads/${f.filename}`);
+    res.status(201).json({ urls });
+  } catch (err) {
+    console.error('POST /uploads/videos error:', err);
+    res.status(500).json({ error: 'Upload failed' });
+  }
+});
+
 export default router;
