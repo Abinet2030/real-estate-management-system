@@ -16,6 +16,9 @@
         { "url": "https://images.unsplash.com/photo-1598928506310-6c8a66f0b4d4?auto=format&w=1600&q=80", "alt": "Apartment kitchen and dining area" },
         { "url": "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&w=1600&q=80", "alt": "Bedroom with natural light" }
       ],
+      "videos": [
+        "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4"
+      ],
       "featured": true,
       "created_by": "user-admin-1",
       "status": "published",
