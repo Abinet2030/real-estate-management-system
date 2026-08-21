@@ -14,7 +14,9 @@
       "images": [
         { "url": "https://images.unsplash.com/photo-1560185008-b033106af2f1?auto=format&w=1600&q=80", "alt": "Living room with modern finishes" },
         { "url": "https://images.unsplash.com/photo-1598928506310-6c8a66f0b4d4?auto=format&w=1600&q=80", "alt": "Apartment kitchen and dining area" },
-        { "url": "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&w=1600&q=80", "alt": "Bedroom with natural light" }
+        { "url": "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&w=1600&q=80", "alt": "Bedroom with natural light" },
+        { "url": "https://images.unsplash.com/photo-1499951360447-b19be8fe80f5?auto=format&w=1600&q=80", "alt": "Cozy secondary bedroom" },
+        { "url": "https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&w=1600&q=80", "alt": "Balcony and city view" }
       ],
       "videos": [
         "https://youtu.be/oOfsTGotZtw",
