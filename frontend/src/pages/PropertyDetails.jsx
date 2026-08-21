@@ -85,6 +85,12 @@ export default function PropertyDetails() {
 
         <section className="property-hero-grid">
           <ImmersiveGallery images={images} title={item.title} index={current} onChange={setActiveImage} onOpen={() => setViewerOpen(true)} />
+          {Array.isArray(item.videos) && item.videos.length > 0 && (
+            <aside className="property-videos">
+              <h3>Virtual tour</h3>
+              <VideoGallery videos={item.videos} title={item.title} />
+            </aside>
+          )}
           <aside className="property-summary">
             <p className="eyebrow">{String(item.type || 'Property').toUpperCase()} · {statusLabel(item.status)}</p>
             <h2>{formatCurrency(item.price, item.currency)}</h2>
@@ -141,6 +147,22 @@ function ImageViewer({ open, images, index, title, onChange, onClose }) {
   function touchEnd(event) { if (touch.current && event.changedTouches.length === 1 && scale === 1) { const distance = event.changedTouches[0].clientX - touch.current.x; if (Math.abs(distance) > 55) navigate(distance < 0 ? 1 : -1) } touch.current = null }
   async function requestFullScreen() { try { await stageRef.current?.requestFullscreen?.() } catch { /* browser can deny fullscreen; modal remains full viewport */ } }
   return <div className={`image-viewer${closing ? ' viewer-closing' : ''}`} role="dialog" aria-modal="true" aria-label="Property photo viewer"><div className="viewer-toolbar"><span>{title} · {index + 1} / {images.length}</span><div><button onClick={() => updateScale(scale - .25)} aria-label="Zoom out">−</button><span className="zoom-value">{Math.round(scale * 100)}%</span><button onClick={() => updateScale(scale + .25)} aria-label="Zoom in">+</button><button onClick={requestFullScreen} aria-label="Browser fullscreen">⛶</button><button onClick={closeWithAnimation} aria-label="Close viewer">×</button></div></div><div ref={stageRef} className="viewer-stage" onWheel={onWheel} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp} onTouchStart={touchStart} onTouchMove={touchMove} onTouchEnd={touchEnd}><img draggable="false" src={toAbsolute(images[index])} alt={title || 'Property'} style={{ transform: `translate3d(${position.x}px, ${position.y}px, 0) scale(${scale})` }} />{images.length > 1 && <><button className="viewer-nav left" onClick={() => navigate(-1)}>‹</button><button className="viewer-nav right" onClick={() => navigate(1)}>›</button></>}</div><div className="viewer-thumbnails">{images.map((image, imageIndex) => <button className={imageIndex === index ? 'active' : ''} key={image} onClick={() => onChange(imageIndex)}><img src={toAbsolute(image)} alt={`Photo ${imageIndex + 1}`} /></button>)}</div></div>
+}
+
+function VideoGallery({ videos = [], title = '' }) {
+  const [index, setIndex] = useState(0)
+  if (!Array.isArray(videos) || !videos.length) return null
+  const src = videos[index]
+  return (
+    <div className="video-gallery">
+      <div className="video-stage">
+        <video controls style={{ width: '100%', maxHeight: '360px' }} src={toAbsolute(src)} aria-label={`Virtual tour for ${title}`}>
+          Sorry, your browser doesn't support embedded videos.
+        </video>
+      </div>
+      {videos.length > 1 && <div className="video-thumbs">{videos.map((v, i) => <button key={v} onClick={() => setIndex(i)} className={i === index ? 'active' : ''} aria-label={`Play video ${i + 1}`}><span>▶</span><small>{`Video ${i + 1}`}</small></button>)}</div>}
+    </div>
+  )
 }
 
 function Fact({ icon, label, value }) { return <div><b>{icon} {value}</b><span>{label}</span></div> }

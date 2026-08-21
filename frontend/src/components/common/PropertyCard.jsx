@@ -13,7 +13,11 @@ export default function PropertyCard({ property, agent }) {
     {coverSrc ? <img className="property-card-image" src={coverSrc} alt={p.title || 'Property'} onError={() => { if (idx < candidates.length - 1) setIdx(idx + 1) }} /> : <div className="property-card-image property-card-placeholder">Image coming soon</div>}
     {agent && <img className="property-agent-avatar" src={agentAvatar} alt={agentName} onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(agentName)}&background=111827&color=fff&size=80` }} />}
     <div className="property-card-body">
-      <div className="property-card-topline"><span className="property-type">{p.saleType === 'rent' ? 'For rent' : 'For sale'}</span><div className="property-price">{priceToText(p.price, p.currency)}</div></div>
+      <div className="property-card-topline">
+        <span className="property-type">{p.saleType === 'rent' ? 'For rent' : 'For sale'}</span>
+        {Array.isArray(p.videos) && p.videos.length > 0 && <span className="property-video-badge" title="Virtual tour available">🎬 {p.videos.length}</span>}
+        <div className="property-price">{priceToText(p.price, p.currency)}</div>
+      </div>
       <h3>{p.title || 'Property'}</h3>
       <p className="property-location">Location: {locToText(p.location)}</p>
       <p className="property-facts">{descText(p) || 'Property details available on request'}</p>
