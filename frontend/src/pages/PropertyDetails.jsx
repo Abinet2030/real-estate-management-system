@@ -53,7 +53,7 @@ export default function PropertyDetails() {
 
   const images = imageCandidates(item)
   const current = Math.min(activeImage, Math.max(images.length - 1, 0))
-  const canModify = true
+  const canModify = !!(user && String(user.role || '').toLowerCase() === 'admin')
   const amenities = Array.isArray(item.features) ? item.features : (Array.isArray(item.amenities) ? item.amenities : [])
   const contactTitle = 'Send inquiry to admin'
 
