@@ -17,7 +17,7 @@ export default function PropertyCard({ property, agent }) {
       <h3>{p.title || 'Property'}</h3>
       <p className="property-location">Location: {locToText(p.location)}</p>
       <p className="property-facts">{descText(p) || 'Property details available on request'}</p>
-      <div className="property-card-actions"><Link className="property-details-link" to={`/properties/${p.id || p._id || '1'}`}><span>View property</span><span aria-hidden="true">→</span></Link></div>
+      <div className="property-card-actions"><Link className="property-details-link" to={`/properties/${p.id || p._id || '1'}`}><span style={{color: '#fff', display: 'inline-block', maxWidth: 'calc(100% - 28px)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>View property</span><span aria-hidden="true">→</span></Link></div>
     </div>
   </article>
 }
