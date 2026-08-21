@@ -1,0 +1,5 @@
+/* Styles for image remove controls */
+.image-remove-button { position:absolute; top:10px; right:10px; z-index:30; width:34px; height:34px; border-radius:8px; background:rgba(0,0,0,.6); color:white; border:0; display:grid; place-items:center; font-size:18px; cursor:pointer; }
+.image-remove-button:hover { background:rgba(0,0,0,.8); }
+.image-remove-thumb { position:absolute; top:6px; right:6px; z-index:20; width:26px; height:26px; border-radius:6px; background:rgba(0,0,0,.6); color:white; border:0; display:grid; place-items:center; font-size:14px; cursor:pointer; }
+.image-remove-thumb:hover { background:rgba(0,0,0,.8); }

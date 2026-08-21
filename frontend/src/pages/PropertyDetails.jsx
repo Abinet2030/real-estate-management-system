@@ -3,6 +3,7 @@ import { Link, useLocation, useParams } from 'react-router-dom'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext.jsx'
 import './property-details.css'
+import './property-image-remove.css'
 
 export default function PropertyDetails() {
   const { id } = useParams()
@@ -88,8 +89,10 @@ export default function PropertyDetails() {
           {Array.isArray(item.videos) && item.videos.length > 0 && (
             <aside className="property-videos">
               <h3>Virtual tour</h3>
+  const canModify = !!(user && (user.role === 'admin' || String(user.id || user._id) === String(item.ownerId || item.created_by || item.createdBy)))
               <VideoGallery videos={item.videos} title={item.title} />
             </aside>
+    if (!canModify) return window.alert('You are not authorized to remove images from this property.')
           )}
           <aside className="property-summary">
             <p className="eyebrow">{String(item.type || 'Property').toUpperCase()} · {statusLabel(item.status)}</p>
@@ -122,7 +125,7 @@ export default function PropertyDetails() {
 function ImmersiveGallery({ images, title, index, onChange, onOpen }) {
   if (!images.length) return <div className="gallery-empty">No property photos available</div>
   const select = next => onChange((next + images.length) % images.length)
-  return <div className="immersive-gallery"><button className="gallery-main" onClick={onOpen} aria-label="Open full-screen photo viewer"><img src={toAbsolute(images[index])} alt={title || 'Property'} /><span className="gallery-overlay"><b>Immersive photo tour</b><small>Open image viewer</small></span></button>{images.length > 1 && <><button className="gallery-arrow previous" onClick={() => select(index - 1)} aria-label="Previous photo">‹</button><button className="gallery-arrow next" onClick={() => select(index + 1)} aria-label="Next photo">›</button></>}<button className="gallery-expand" onClick={onOpen}>⛶ <span>View photos</span> {images.length > 1 && `(${index + 1}/${images.length})`}</button><div className="gallery-thumbnails">{images.map((image, imageIndex) => <button key={image} onClick={() => onChange(imageIndex)} className={imageIndex === index ? 'active' : ''} aria-label={`Show photo ${imageIndex + 1}`}><img src={toAbsolute(image)} alt="" /></button>)}</div></div>
+  return <div className="immersive-gallery"><div style={{ position: 'relative' }}><button className="gallery-main" onClick={onOpen} aria-label="Open full-screen photo viewer"><img src={toAbsolute(images[index])} alt={title || 'Property'} /><span className="gallery-overlay"><b>Immersive photo tour</b><small>Open image viewer</small></span></button>{canModify && <button className="image-remove-button" onClick={(e) => { e.stopPropagation(); removeImage(images[index]) }} aria-label="Remove image">×</button>}</div>{images.length > 1 && <><button className="gallery-arrow previous" onClick={() => select(index - 1)} aria-label="Previous photo">‹</button><button className="gallery-arrow next" onClick={() => select(index + 1)} aria-label="Next photo">›</button></>}<button className="gallery-expand" onClick={onOpen}>⛶ <span>View photos</span> {images.length > 1 && `(${index + 1}/${images.length})`}</button><div className="gallery-thumbnails">{images.map((image, imageIndex) => <div key={image} style={{ position: 'relative' }}><button onClick={() => onChange(imageIndex)} className={imageIndex === index ? 'active' : ''} aria-label={`Show photo ${imageIndex + 1}`}><img src={toAbsolute(image)} alt="" /></button>{canModify && <button className="image-remove-thumb" onClick={(e) => { e.stopPropagation(); removeImage(image) }} aria-label={`Remove photo ${imageIndex + 1}`}>×</button>}</div>)}</div></div>
 }
 
 function ImageViewer({ open, images, index, title, onChange, onClose }) {
