@@ -385,7 +385,18 @@ async function uploadImages(files) {
       // Note: no Content-Type; browser sets multipart boundary
     },
   })
-  if (!res.ok) throw new Error(`API POST failed: ${res.status}`)
+  if (!res.ok) {
+    // If the uploads endpoint is not available (e.g. remote serverless host),
+    // fall back to the demo uploader so static/dev flows keep working.
+    if (res.status === 404) {
+      try {
+        return createDemoApi().uploadImages(files)
+      } catch (e) {
+        throw new Error(`API POST failed: ${res.status}`)
+      }
+    }
+    throw new Error(`API POST failed: ${res.status}`)
+  }
   return res.json()
 }
 
@@ -402,7 +413,16 @@ async function uploadVideos(files) {
       // Note: no Content-Type; browser sets multipart boundary
     },
   })
-  if (!res.ok) throw new Error(`API POST failed: ${res.status}`)
+  if (!res.ok) {
+    if (res.status === 404) {
+      try {
+        return createDemoApi().uploadVideos(files)
+      } catch (e) {
+        throw new Error(`API POST failed: ${res.status}`)
+      }
+    }
+    throw new Error(`API POST failed: ${res.status}`)
+  }
   return res.json()
 }
 
